@@ -1,0 +1,32 @@
+{
+  "name": "gulp-less-changed",
+  "version": "1.0.0",
+  "description": "Only pass .less files through the gulp stream if they or their dependencies have changed",
+  "main": "release/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bingnz/gulp-less-changed.git"
+  },
+  "keywords": [
+    "gulp",
+    "less",
+    "changed",
+    "dependencies"
+  ],
+  "author": "David Chandler",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bingnz/gulp-less-changed/issues"
+  },
+  "homepage": "https://github.com/bingnz/gulp-less-changed#readme",
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-flatten": "^0.2.0",
+    "gulp-load-plugins": "^1.2.0",
+    "gulp-typescript": "^2.10.0",
+    "typescript": "^1.7.5"
+  }
+}
