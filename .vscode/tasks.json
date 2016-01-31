@@ -6,7 +6,18 @@
         {
             "taskName": "default",
             "isBuildCommand": true,
-            "showOutput": "always"
+            "showOutput": "always",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        {
+            "taskName": "run-tests",
+            "isTestCommand": true,
+            "showOutput": "always",
+            "problemMatcher": [
+                "$tsc"
+            ]
         }
     ]
 }

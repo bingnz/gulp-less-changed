@@ -1,12 +1,11 @@
 {
     "compilerOptions": {
-        "target": "ES5",
+        "target": "es6",
         "module": "commonjs",
         "noImplicitAny": true,
         "preserveConstEnums": true,
-        "removeComments": true
-    },
-    "files": [
-        "src/index.ts"
-    ]
+        "removeComments": true,
+        "declaration": true,
+        "noEmitOnError": true
+    }
 }

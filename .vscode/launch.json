@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "request": "launch",
+            "name": "Tests - Debug Mocha Test",
+            "type": "node",
+            // Notice, we bypass the launcher and start the test runner directly
+            "program": "node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            // run the tests in the test folder
+            "args": [
+                "test"
+            ],
+            "sourceMaps": true,
+            "runtimeExecutable": null,
+            "env": {}
+        },        
+        {
+            "request": "attach",
+            "name": "Attach",
+            "type": "node",
+            // Port to attach to.
+            "port": 5858,
+            "sourceMaps": true
+        }
+    ]
+}

@@ -2,16 +2,16 @@
   "name": "gulp-less-changed",
   "version": "1.0.0",
   "description": "Only pass .less files through the gulp stream if they or their dependencies have changed",
-  "main": "release/index.js",
+  "main": "release/src/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "gulp run-tests"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bingnz/gulp-less-changed.git"
   },
   "keywords": [
-    "gulp",
+    "gulpplugin",
     "less",
     "changed",
     "dependencies"
@@ -23,10 +23,31 @@
   },
   "homepage": "https://github.com/bingnz/gulp-less-changed#readme",
   "devDependencies": {
+    "chai": "^3.5.0",
+    "event-stream": "^3.3.2",
+    "fake-fs": "^0.5.0",
     "gulp": "^3.9.0",
     "gulp-flatten": "^0.2.0",
     "gulp-load-plugins": "^1.2.0",
+    "gulp-mocha": "^2.2.0",
+    "gulp-sourcemaps": "^1.6.0",
     "gulp-typescript": "^2.10.0",
-    "typescript": "^1.7.5"
+    "merge2": "^1.0.0",
+    "mocha": "^2.4.5",
+    "path": "^0.12.7",
+    "rewire": "^2.5.1",
+    "sinon": "^1.17.3",
+    "stream-assert": "^2.0.3",
+    "through2": "^2.0.0",
+    "tsc": "^1.20150623.0",
+    "typescript": "^1.7.5",
+    "vinyl": "^1.1.1",
+    "vinyl-fs": "^2.3.1",
+    "vinyl-fs-fake": "^1.1.0"
+  },
+  "dependencies": {
+    "gulp-util": "^3.0.7",
+    "q": "^1.4.1",
+    "through2": "^2.0.0"
   }
 }
