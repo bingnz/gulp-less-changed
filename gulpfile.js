@@ -26,9 +26,18 @@ gulp.task('compile', function () {
     ]);
 });
 
-gulp.task('run-tests', ['compile'], function () {
+gulp.task('pre-test', function () {
+  return gulp.src(['release/**/*.js'])
+    // Covering files
+    .pipe(plugins.istanbul())
+    // Force `require` to return covered files
+    .pipe(plugins.istanbul.hookRequire());
+});
+
+gulp.task('run-tests', ['compile', 'pre-test'], function () {
     return gulp.src('test/**/*.js', { read: false })
-        .pipe(plugins.mocha({ reporter: 'spec' }));
+        .pipe(plugins.mocha({ reporter: 'spec' }))
+        .pipe(plugins.istanbul.writeReports());
 });
 
 gulp.task('default', ['compile']);

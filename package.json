@@ -28,6 +28,7 @@
     "fake-fs": "^0.5.0",
     "gulp": "^3.9.0",
     "gulp-flatten": "^0.2.0",
+    "gulp-istanbul": "^0.10.3",
     "gulp-load-plugins": "^1.2.0",
     "gulp-mocha": "^2.2.0",
     "gulp-sourcemaps": "^1.6.0",
