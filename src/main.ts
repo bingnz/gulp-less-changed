@@ -23,23 +23,21 @@ module gulpLessChanged {
         }
 
         let outputFile = gutil.replaceExtension(file.path, '.css');
-        fs.stat(outputFile, (error: NodeJS.ErrnoException, stats: fs.Stats): void => {
-            if (error) {
+
+        q.nfcall(fs.stat.bind(fs), outputFile)
+            .then((stats: fs.Stats) => {
+                if (stats.mtime < file.stat.mtime) {
+                    return callback(null, file);
+                }
+                callback(null, null);
+            },
+            (error: NodeJS.ErrnoException) => {
                 if (error.code === 'ENOENT') {
                     return callback(null, file);
                 }
-                else {
-                    this.emit('error', new gutil.PluginError(MODULE_NAME, 'Error processing \'' + file.path + '\': ' + error));
-                    return callback(null, null);
-                }
-            }
 
-            if (stats.mtime < file.stat.mtime) {
-                this.emit(file);
-            }
-
-            return callback(null, null);
-        });
+                this.emit('error', new gutil.PluginError(MODULE_NAME, 'Error processing \'' + file.path + '\': ' + error));
+            });
     }
 }
 
