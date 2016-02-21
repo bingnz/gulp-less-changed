@@ -3,10 +3,11 @@
 import vinyl = require('vinyl');
 import * as less from 'less';
 import * as path from 'path';
+import streamToArray = require('stream-to-array');
 
 class dataUriPlugin {
     private _imports: string[];
-    
+
     constructor() {
         this._imports = [];
     }
@@ -19,13 +20,33 @@ class dataUriPlugin {
                 importedFile = mimeType;
             }
             let importPath = path.join(this.currentFileInfo.currentDirectory, importedFile.value);
-            self._imports.push(importPath);
+            if (self._imports.indexOf(importPath) < 0) {
+                self._imports.push(importPath);
+            }
         });
     }
 
     public get imports(): string[] {
         return this._imports;
     }
+}
+
+function getLessData(file: vinyl): Promise<string> {
+    if (file.isBuffer()) {
+        return new Promise<string>((resolve, reject) => {
+            process.nextTick(() => resolve(file.contents.toString()));
+        });
+    }
+
+    return streamToArray(<NodeJS.ReadableStream>file.contents)
+        .then(parts => {
+            let buffers: Buffer[] = [];
+            for (let i = 0; i < parts.length; ++i) {
+                let part = parts[i]
+                buffers.push((part instanceof Buffer) ? part : new Buffer(part))
+            }
+            return Buffer.concat(buffers).toString();
+        });
 }
 
 function listImports(file: vinyl): Promise<string[]> {
@@ -35,19 +56,21 @@ function listImports(file: vinyl): Promise<string[]> {
             return resolve([]);
         }
 
-        let lessData = file.contents.toString();
         let dataUri = new dataUriPlugin();
         let options = { filename: file.path, plugins: [dataUri] };
 
-        less
-            .render(lessData, options)
-            .then(value => {
-                resolve(value.imports.concat(dataUri.imports));
+        getLessData(file)
+            .then(lessData => {
+                less
+                    .render(lessData, options)
+                    .then(value => {
+                        resolve(value.imports.concat(dataUri.imports));
+                    })
+                    .catch(reason => {
+                        console.error('Failed to process imports for \'' + file.path + '\': ' + reason);
+                        resolve([]);
+                    });
             })
-            .catch(reason => {
-                console.error('Failed to process imports for \'' + file.path + '\': ' + reason);
-                resolve([]);
-            });
     });
 }
 

@@ -6,6 +6,7 @@ var rewire = require('rewire');
 var q = require('q');
 var fs = require('fs');
 var path = require('path');
+var process = require('process');
 
 var listImports = rewire('../release/list-imports');
 
@@ -20,6 +21,13 @@ function readFile(file) {
             }, reason => {
                 reject(reason);
             });
+    });
+}
+
+function readFileAsStream(file) {
+    return new Promise((resolve, reject) => {
+        file.contents = fs.createReadStream(file.path, { autoClose: true });
+        process.nextTick(() => resolve(file));
     });
 }
 
@@ -69,7 +77,7 @@ describe('list-imports', () => {
         it('should return the imports', () => {
             return readFile(new File({ path: filePath }))
                 .then(f => listImports(f))
-                .then(importList => expect(importList.map(x => x.split(path.sep).join('!'))).to.deep.equal([
+                .then(importList => expect(importList.sort().map(x => x.split(path.sep).join('!'))).to.deep.equal([
                     'test!list-imports-cases!file-with-recursive-imports!import1.less',
                     'test!list-imports-cases!file-with-recursive-imports!import2.less'
                 ]));
@@ -83,6 +91,29 @@ describe('list-imports', () => {
                 .then(f => listImports(f))
                 .then(importList => expect(importList.map(x => x.split(path.sep).join('!'))).to.deep.equal([
                     'test!list-imports-cases!file-with-data-uri!image.svg']));
+        });
+    });
+
+    describe('when passing in a file with a data-uri with MIME type and import by reference', () => {
+        const filePath = './test/list-imports-cases/file-with-data-uri-mime-type/file.less';
+        it('should return the referenced image and file as imports', () => {
+            return readFile(new File({ path: filePath }))
+                .then(f => listImports(f))
+                .then(importList => expect(importList.sort().map(x => x.split(path.sep).join('!'))).to.deep.equal([
+                    'test!list-imports-cases!file-with-data-uri-mime-type!image.svg',
+                    'test!list-imports-cases!file-with-data-uri-mime-type!x.less']));
+        });
+    });
+
+    describe('when passing in a file as a stream', () => {
+        const filePath = './test/list-imports-cases/file-with-recursive-imports/file.less';
+        it('should return the imports', () => {
+            return readFileAsStream(new File({ path: filePath }))
+                .then(f => listImports(f))
+                .then(importList => expect(importList.sort().map(x => x.split(path.sep).join('!'))).to.deep.equal([
+                    'test!list-imports-cases!file-with-recursive-imports!import1.less',
+                    'test!list-imports-cases!file-with-recursive-imports!import2.less'
+                ]));
         });
     });
 });
