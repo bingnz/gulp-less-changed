@@ -1,7 +1,6 @@
 'use strict';
 
 var chai = require('chai');
-var es = require('event-stream');
 var File = require('vinyl');
 var vinylFs = require('vinyl-fs');
 var FakeFs = require('fake-fs');
