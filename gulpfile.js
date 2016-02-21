@@ -26,7 +26,7 @@ gulp.task('compile', function () {
     ]);
 });
 
-gulp.task('pre-test', function () {
+gulp.task('pre-test', ['compile'], function () {
   return gulp.src(['release/**/*.js'])
     // Covering files
     .pipe(plugins.istanbul())
@@ -34,7 +34,7 @@ gulp.task('pre-test', function () {
     .pipe(plugins.istanbul.hookRequire());
 });
 
-gulp.task('run-tests', ['compile', 'pre-test'], function () {
+gulp.task('run-tests', ['pre-test'], function () {
     return gulp.src('test/**/*.js', { read: false })
         .pipe(plugins.mocha({ reporter: 'spec' }))
         .pipe(plugins.istanbul.writeReports());

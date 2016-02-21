@@ -21,7 +21,8 @@ describe('gulp-less-changed', () => {
         it('should not pass any file onto the stream', (done) => {
             lessChangedStream
                 .pipe(streamAssert.length(0))
-                .pipe(streamAssert.end(done));
+                .pipe(streamAssert.end(done))
+                .once('assertion', done);
         });
     });
 
@@ -40,7 +41,8 @@ describe('gulp-less-changed', () => {
         it('should not pass any file onto the stream', (done) => {
             lessChangedStream
                 .pipe(streamAssert.length(0))
-                .pipe(streamAssert.end(done));
+                .pipe(streamAssert.end(done))
+                .once('assertion', done);
         });
     });
 
@@ -62,7 +64,8 @@ describe('gulp-less-changed', () => {
         it('should not pass any file onto the stream', (done) => {
             lessChangedStream
                 .pipe(streamAssert.length(0))
-                .pipe(streamAssert.end(done));
+                .pipe(streamAssert.end(done))
+                .once('assertion', done);
         });
     });
 
@@ -87,7 +90,8 @@ describe('gulp-less-changed', () => {
             lessChangedStream
                 .pipe(streamAssert.length(1))
                 .pipe(streamAssert.first(item => expect(item).to.equal(fakeLessFile)))
-                .pipe(streamAssert.end(done));
+                .pipe(streamAssert.end(done))
+                .once('assertion', done);
         });
     });
 
@@ -115,7 +119,8 @@ describe('gulp-less-changed', () => {
             lessChangedStream
                 .pipe(streamAssert.length(1))
                 .pipe(streamAssert.first(item => expect(item).to.equal(fakeLessFile)))
-                .pipe(streamAssert.end(done));
+                .pipe(streamAssert.end(done))
+                .once('assertion', done);
         });
     });
 
@@ -139,13 +144,22 @@ describe('gulp-less-changed', () => {
         let lessChangedStream = lessChanged();
 
         it('should emit an error to the stream', (done) => {
-            lessChangedStream.once('error', error => {
-                expect(error.message).to.contain('Error processing \'hello.less\'');
-                done();
-            });
+            let errorOccurred = false;
 
             lessChangedStream.write(fakeLessFile);
             lessChangedStream.end();
+            
+            lessChangedStream.once('error', error => {
+                expect(error.message).to.contain('Error processing \'hello.less\'');
+                errorOccurred = true;
+            });
+
+            lessChangedStream
+                .pipe(streamAssert.end(() => {
+                    expect(errorOccurred).to.be.true;
+                    done();
+                }))
+                .once('assertion', done);
         });
     });
 });

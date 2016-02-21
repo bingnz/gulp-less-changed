@@ -37,6 +37,7 @@ module gulpLessChanged {
                 }
 
                 this.emit('error', new gutil.PluginError(MODULE_NAME, 'Error processing \'' + file.path + '\': ' + error));
+                callback(null, null);
             });
     }
 }
