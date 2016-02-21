@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "gulp-util": "^3.0.7",
+    "less": "^2.6.0",
     "q": "^1.4.1",
     "through2": "^2.0.0"
   }
