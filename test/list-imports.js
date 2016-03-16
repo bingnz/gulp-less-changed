@@ -8,7 +8,7 @@ var fs = require('fs');
 var path = require('path');
 var process = require('process');
 
-var listImports = rewire('../release/list-imports');
+var listImports = rewire('../release/list-imports').listImports;
 
 var expect = chai.expect;
 

@@ -6,16 +6,17 @@
             "name": "Tests - Debug Mocha Test",
             "type": "node",
             // Notice, we bypass the launcher and start the test runner directly
-            "program": "node_modules/mocha/bin/_mocha",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
             // run the tests in the test folder
             "args": [
-                "test"
+                "${workspaceRoot}/test"
             ],
+            "cwd": "${workspaceRoot}",
             "sourceMaps": true,
             "runtimeExecutable": null,
             "env": {}
-        },        
+        },
         {
             "request": "attach",
             "name": "Attach",

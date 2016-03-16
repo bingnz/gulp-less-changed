@@ -8,7 +8,7 @@ var tsProject = plugins.typescript.createProject('tsconfig.json', {
 });
 
 gulp.task('compile', function () {
-    var tsResult = gulp.src(['src/**/*.ts', 'src/less.d.ts', 'src/stream-to-array.d.ts', 'typings/main.d.ts'])
+    var tsResult = gulp.src(['src/**/*.ts', 'src/*.d.ts', 'typings/main.d.ts'])
         .pipe(plugins.sourcemaps.init())
         .pipe(plugins.typescript(tsProject));
 

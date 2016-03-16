@@ -48,6 +48,7 @@
     "vinyl-fs-fake": "^1.1.0"
   },
   "dependencies": {
+    "async-q": "^0.3.1",
     "gulp-util": "^3.0.7",
     "less": "^2.6.0",
     "process": "^0.11.2",

@@ -13,6 +13,16 @@ var lessChanged = rewire('../release/main');
 var expect = chai.expect;
 
 describe('gulp-less-changed', () => {
+
+    beforeEach(() => {
+        lessChanged.__set__('ListImports', {
+            listImports: function () {
+                return new Promise((resolve, reject) => resolve([]));
+            }
+        });
+        lessChanged.__set__('fs', new FakeFs());
+    });
+
     describe('when passing in an unresolved file', () => {
         let lessChangedStream = lessChanged();
         lessChangedStream.write(new File());
@@ -125,40 +135,147 @@ describe('gulp-less-changed', () => {
     });
 
     describe('when there is an error calling fs.stat for the output file', () => {
+        let fakeLessFile;
+        let lessChangedStream;
+        beforeEach(() => {
+            let date = new Date();
 
-        let date = new Date();
+            let fs = new FakeFs();
+            lessChanged.__set__('fs', fs);
 
-        let fs = new FakeFs();
-        lessChanged.__set__('fs', fs);
+            fs.file('hello.css', { mtime: date });
 
-        fs.file('hello.css', { mtime: date });
+            var fakeError = new Error('test');
+            fakeError.code = 'SOMEERR';
+            sinon.stub(fs, 'stat', file => {
+                throw fakeError;
+            });
 
-        var fakeError = new Error('test');
-        fakeError.code = 'SOMEERR';
-        sinon.stub(fs, 'stat', file => {
-            throw fakeError;
+            fakeLessFile = new File({ path: 'hello.less', stat: { mtime: date }, contents: new Buffer('some content') });
+
+            lessChangedStream = lessChanged();
         });
-
-        let fakeLessFile = new File({ path: 'hello.less', stat: { mtime: date }, contents: new Buffer('some content') });
-
-        let lessChangedStream = lessChanged();
 
         it('should emit an error to the stream', (done) => {
             let errorOccurred = false;
 
-            lessChangedStream.write(fakeLessFile);
-            lessChangedStream.end();
-            
             lessChangedStream.once('error', error => {
                 expect(error.message).to.contain('Error processing \'hello.less\'');
                 errorOccurred = true;
             });
+
+            lessChangedStream.write(fakeLessFile);
+            lessChangedStream.end();
 
             lessChangedStream
                 .pipe(streamAssert.end(() => {
                     expect(errorOccurred).to.be.true;
                     done();
                 }))
+                .once('assertion', done);
+        });
+    });
+
+    describe('when passed a file with an import that has not changed', () => {
+        let lessChangedStream;
+        let fakeFile;
+
+        beforeEach(() => {
+            let date = new Date();
+
+            let fs = new FakeFs();
+            lessChanged.__set__('fs', fs);
+
+            fs.file('import.less', { mtime: date, contents: new Buffer('some content') });
+            lessChanged.__set__('ListImports', {
+                listImports: function () {
+                    return new Promise((resolve, reject) => resolve(['import.less']));
+                }
+            });
+
+            fs.file('main.css', { mtime: date });
+
+            fakeFile = new File({ path: 'main.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+            lessChangedStream = lessChanged();
+        });
+
+        it('should not pass the file onto the stream', (done) => {
+            lessChangedStream.write(fakeFile);
+            lessChangedStream.end();
+
+            lessChangedStream
+                .pipe(streamAssert.length(0))
+                .pipe(streamAssert.end(done))
+                .once('assertion', done);
+        });
+    });
+
+    describe('when passed a file with an import that has changed', () => {
+        let lessChangedStream;
+        let fakeFile;
+
+        beforeEach(() => {
+            let olderDate = new Date();
+            let newerDate = new Date();
+            newerDate.setDate(newerDate.getDate() + 1);
+
+            let fs = new FakeFs();
+            lessChanged.__set__('fs', fs);
+
+            fs.file('import.less', { mtime: newerDate, contents: new Buffer('some content') });
+            lessChanged.__set__('ListImports', {
+                listImports: function () {
+                    return new Promise((resolve, reject) => resolve(['import.less']));
+                }
+            });
+
+            fs.file('main.css', { mtime: olderDate });
+
+            fakeFile = new File({ path: 'main.less', stat: { mtime: olderDate }, contents: new Buffer('@import \'import.less\';') });
+            lessChangedStream = lessChanged();
+        });
+
+        it('should pass the file onto the stream', (done) => {
+            lessChangedStream.write(fakeFile);
+            lessChangedStream.end();
+
+            lessChangedStream
+                .pipe(streamAssert.length(1))
+                .pipe(streamAssert.first(item => expect(item).to.equal(fakeFile)))
+                .pipe(streamAssert.end(done))
+                .once('assertion', done);
+        });
+    });
+    
+    describe('when passed a file with an import that doesn\'t exist', () => {
+        let lessChangedStream;
+        let fakeFile;
+
+        beforeEach(() => {
+            let date = new Date();
+
+            let fs = new FakeFs();
+            lessChanged.__set__('fs', fs);
+
+            lessChanged.__set__('ListImports', {
+                listImports: function () {
+                    return new Promise((resolve, reject) => resolve(['missing.less']));
+                }
+            });
+
+            fs.file('main.css', { mtime: date });
+
+            fakeFile = new File({ path: 'main.less', stat: { mtime: date }, contents: new Buffer('@import \'missing.less\';') });
+            lessChangedStream = lessChanged();
+        });
+
+        it('should not pass the file onto the stream', (done) => {
+            lessChangedStream.write(fakeFile);
+            lessChangedStream.end();
+
+            lessChangedStream
+                .pipe(streamAssert.length(0))
+                .pipe(streamAssert.end(done))
                 .once('assertion', done);
         });
     });
