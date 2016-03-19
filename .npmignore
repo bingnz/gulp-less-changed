@@ -1,0 +1,7 @@
+*.map
+*.d.ts
+coverage
+src
+test
+typings
+.vscode
