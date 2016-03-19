@@ -279,4 +279,27 @@ describe('gulp-less-changed', () => {
                 .once('assertion', done);
         });
     });
+
+    describe('when the output file name function is overridden', () => {
+        let olderDate = new Date();
+        let newerDate = new Date();
+        newerDate.setDate(newerDate.getDate() + 1);
+
+        let fs = new FakeFs();
+        lessChanged.__set__('fs', fs);
+
+        fs.file('something.different.ext', { mtime: newerDate });
+
+        let fakeFile = new File({ path: 'something.less', stat: { mtime: olderDate }, contents: new Buffer('some content') });
+        let lessChangedStream = lessChanged({ getOutputFileName: input => input.replace('.less', '.different.ext') });
+        lessChangedStream.write(fakeFile);
+        lessChangedStream.end();
+
+        it('should look for the correct output file', (done) => {
+            lessChangedStream
+                .pipe(streamAssert.length(0))
+                .pipe(streamAssert.end(done))
+                .once('assertion', done);
+        });
+    });
 });

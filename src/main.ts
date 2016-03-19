@@ -10,12 +10,9 @@ import vinyl = require('vinyl');
 
 const MODULE_NAME = 'gulp-less-changed';
 
-function gulpLessChanged(options?: gulpLessChanged.PluginOptions): NodeJS.ReadWriteStream {
-    return through.obj(gulpLessChanged.transform);
-}
-
 module gulpLessChanged {
     export interface PluginOptions {
+        getOutputFileName?: (input: string) => string
     }
 
     function checkImportsHaveChanged(file: vinyl) {
@@ -36,43 +33,50 @@ module gulpLessChanged {
             })
     }
 
-    export function transform(file: vinyl, enc: string, callback: (error: any, data: any) => any) {
+    export function run(options?: gulpLessChanged.PluginOptions) {
+        options = options || {};
+        let getOutputFileName = options.getOutputFileName || (input => gutil.replaceExtension(input, '.css'));
 
-        if (file.isNull()) {
-            return callback(null, null);
-        }
+        function transform(file: vinyl, enc: string, callback: (error: any, data: any) => any) {
 
-        let outputFile = gutil.replaceExtension(file.path, '.css');
+            if (file.isNull()) {
+                return callback(null, null);
+            }
 
-        q.nfcall(fs.stat.bind(fs), outputFile)
-            .then((stats: fs.Stats) => {
-                if (stats.mtime < file.stat.mtime) {
-                    this.push(file);
-                    return true;
-                }
-            }, (error: NodeJS.ErrnoException) => {
-                if (error.code === 'ENOENT') {
-                    this.push(file);
-                    return true;
-                }
+            let outputFile = getOutputFileName(file.path);
 
-                this.emit('error', new gutil.PluginError(MODULE_NAME, 'Error processing \'' + file.path + '\': ' + error));
-                return false;
-            })
-            .then((emittedFile: boolean) => {
-                if (emittedFile) {
+            q.nfcall(fs.stat.bind(fs), outputFile)
+                .then((stats: fs.Stats) => {
+                    if (stats.mtime < file.stat.mtime) {
+                        this.push(file);
+                        return true;
+                    }
+                }, (error: NodeJS.ErrnoException) => {
+                    if (error.code === 'ENOENT') {
+                        this.push(file);
+                        return true;
+                    }
+
+                    this.emit('error', new gutil.PluginError(MODULE_NAME, 'Error processing \'' + file.path + '\': ' + error));
                     return false;
-                }
+                })
+                .then((emittedFile: boolean) => {
+                    if (emittedFile) {
+                        return false;
+                    }
 
-                return checkImportsHaveChanged(file).catch(reason => false);
-            })
-            .then((importsHaveChanged: boolean) => {
-                if (importsHaveChanged) {
-                    this.push(file);
-                }
-            })
-            .then(() => callback(null, null));
+                    return checkImportsHaveChanged(file).catch(reason => false);
+                })
+                .then((importsHaveChanged: boolean) => {
+                    if (importsHaveChanged) {
+                        this.push(file);
+                    }
+                })
+                .then(() => callback(null, null));
+        }
+        
+        return through.obj(transform);
     }
 }
 
-export = gulpLessChanged;
+module.exports = gulpLessChanged.run;
