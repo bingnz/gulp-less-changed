@@ -15,11 +15,11 @@ module gulpLessChanged {
         getOutputFileName?: (input: string) => string
     }
 
-    function checkImportsHaveChanged(file: vinyl) {
+    function checkImportsHaveChanged(file: vinyl, mainFileDate: Date) {
         function importHasChanged(file: vinyl, path: string): Q.Promise<boolean> {
             return q.nfcall(fs.stat.bind(fs), path)
                 .then((stats: fs.Stats) => {
-                    return stats.mtime > file.stat.mtime;
+                    return stats.mtime > mainFileDate;
                 });
         }
 
@@ -31,6 +31,11 @@ module gulpLessChanged {
             .then(imports => {
                 return async.some(imports, fileImportHasChanged);
             })
+    }
+    
+    interface IntermediateResult {
+        outputAge: Date,
+        changed: boolean
     }
 
     export function run(options?: gulpLessChanged.PluginOptions) {
@@ -49,23 +54,25 @@ module gulpLessChanged {
                 .then((stats: fs.Stats) => {
                     if (stats.mtime < file.stat.mtime) {
                         this.push(file);
-                        return true;
+                        return { outputAge: stats.mtime, changed: true };
                     }
+
+                    return { outputAge: stats.mtime, changed: false };
                 }, (error: NodeJS.ErrnoException) => {
                     if (error.code === 'ENOENT') {
                         this.push(file);
-                        return true;
+                        return { outputAge: null, changed: true };
                     }
 
                     this.emit('error', new gutil.PluginError(MODULE_NAME, 'Error processing \'' + file.path + '\': ' + error));
-                    return false;
+                    return { outputAge: null, changed: false };
                 })
-                .then((emittedFile: boolean) => {
-                    if (emittedFile) {
+                .then((intermediateResult: IntermediateResult) => {
+                    if (intermediateResult.changed) {
                         return false;
                     }
 
-                    return checkImportsHaveChanged(file).catch(reason => false);
+                    return checkImportsHaveChanged(file, intermediateResult.outputAge).catch(reason => false);
                 })
                 .then((importsHaveChanged: boolean) => {
                     if (importsHaveChanged) {
