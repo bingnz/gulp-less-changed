@@ -2,13 +2,12 @@
 
 var chai = require('chai');
 var File = require('vinyl');
-var rewire = require('rewire');
 var q = require('q');
 var fs = require('fs');
 var path = require('path');
 var process = require('process');
 
-var listImports = rewire('../release/list-imports').listImports;
+var listImports = require('../release/list-imports').listImports;
 
 var expect = chai.expect;
 

@@ -2,7 +2,7 @@
 
 import * as through from 'through2';
 import * as q from 'q';
-import * as fs from 'fs'
+import * as fs from 'fs';
 import * as gutil from 'gulp-util';
 import * as ListImports from './list-imports';
 import * as async from 'async-q';

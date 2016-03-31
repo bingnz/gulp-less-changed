@@ -1,29 +1,26 @@
 'use strict';
-
 var chai = require('chai');
 var File = require('vinyl');
 var vinylFs = require('vinyl-fs');
 var FakeFs = require('fake-fs');
-var rewire = require('rewire');
 var streamAssert = require('stream-assert');
 var sinon = require('sinon');
-
-var lessChanged = rewire('../release/main');
+var proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 
 var expect = chai.expect;
 
+var getLessChanged = function(fs, listImports) {
+    let fsStub = fs || new FakeFs();
+    let listImportsStub = listImports || { listImports: function() { return new Promise((resolve, reject) => resolve([])); } };
+
+    let lessChanged = proxyquire('../release/main', { './list-imports': listImportsStub, 'fs': fsStub });
+    return lessChanged;
+};
+
 describe('gulp-less-changed', () => {
 
-    beforeEach(() => {
-        lessChanged.__set__('ListImports', {
-            listImports: function() {
-                return new Promise((resolve, reject) => resolve([]));
-            }
-        });
-        lessChanged.__set__('fs', new FakeFs());
-    });
-
     describe('when passing in an unresolved file', () => {
+        let lessChanged = getLessChanged();
         let lessChangedStream = lessChanged();
         lessChangedStream.write(new File());
         lessChangedStream.end();
@@ -39,7 +36,7 @@ describe('gulp-less-changed', () => {
     describe('when passed a file with no imports that has not changed', () => {
         let date = new Date();
         let fs = new FakeFs();
-        lessChanged.__set__('fs', fs);
+        let lessChanged = getLessChanged(fs);
 
         fs.file('something.css', { mtime: date });
 
@@ -62,7 +59,7 @@ describe('gulp-less-changed', () => {
         newerDate.setDate(newerDate.getDate() + 1);
 
         let fs = new FakeFs();
-        lessChanged.__set__('fs', fs);
+        let lessChanged = getLessChanged(fs);
 
         fs.file('something.css', { mtime: newerDate });
 
@@ -86,7 +83,7 @@ describe('gulp-less-changed', () => {
         newerDate.setDate(newerDate.getDate() + 1);
 
         let fs = new FakeFs();
-        lessChanged.__set__('fs', fs);
+        let lessChanged = getLessChanged(fs);
 
         fs.file('hello.css', { mtime: olderDate });
 
@@ -110,7 +107,7 @@ describe('gulp-less-changed', () => {
         let date = new Date();
 
         let fs = new FakeFs();
-        lessChanged.__set__('fs', fs);
+        let lessChanged = getLessChanged(fs);
 
         fs.file('hello.css', { mtime: date });
 
@@ -137,11 +134,13 @@ describe('gulp-less-changed', () => {
     describe('when there is an error calling fs.stat for the output file', () => {
         let fakeLessFile;
         let lessChangedStream;
+        let lessChanged;
+        
         beforeEach(() => {
             let date = new Date();
 
             let fs = new FakeFs();
-            lessChanged.__set__('fs', fs);
+            lessChanged = getLessChanged(fs);
 
             fs.file('hello.css', { mtime: date });
 
@@ -179,19 +178,21 @@ describe('gulp-less-changed', () => {
     describe('when passed a file with an import that has not changed', () => {
         let lessChangedStream;
         let fakeFile;
+        let lessChanged;
 
         beforeEach(() => {
             let date = new Date();
 
             let fs = new FakeFs();
-            lessChanged.__set__('fs', fs);
 
             fs.file('import.less', { mtime: date, contents: new Buffer('some content') });
-            lessChanged.__set__('ListImports', {
+            let listImports = {
                 listImports: function() {
                     return new Promise((resolve, reject) => resolve(['import.less']));
                 }
-            });
+            };
+            
+            lessChanged = getLessChanged(fs, listImports);
 
             fs.file('main.css', { mtime: date });
 
@@ -213,6 +214,7 @@ describe('gulp-less-changed', () => {
     describe('when passed a file with an import that has changed', () => {
         let lessChangedStream;
         let fakeFile;
+        let lessChanged;
 
         beforeEach(() => {
             let olderDate = new Date();
@@ -220,16 +222,17 @@ describe('gulp-less-changed', () => {
             newerDate.setDate(newerDate.getDate() + 1);
 
             let fs = new FakeFs();
-            lessChanged.__set__('fs', fs);
 
             fs.file('import.less', { mtime: newerDate, contents: new Buffer('some content') });
-            lessChanged.__set__('ListImports', {
+            let listImports = {
                 listImports: function() {
                     return new Promise((resolve, reject) => resolve(['import.less']));
                 }
-            });
+            };
 
             fs.file('main.css', { mtime: olderDate });
+            
+            lessChanged = getLessChanged(fs, listImports);
 
             fakeFile = new File({ path: 'main.less', stat: { mtime: olderDate }, contents: new Buffer('@import \'import.less\';') });
             lessChangedStream = lessChanged();
@@ -250,6 +253,7 @@ describe('gulp-less-changed', () => {
     describe('when passed a file with an import that is newer than the main file but older than the output', () => {
         let lessChangedStream;
         let fakeFile;
+        let lessChanged;
 
         beforeEach(() => {
             let olderDate = new Date();
@@ -259,14 +263,15 @@ describe('gulp-less-changed', () => {
             newerDate.setDate(newerDate.getDate() + 2);
 
             let fs = new FakeFs();
-            lessChanged.__set__('fs', fs);
 
             fs.file('import.less', { mtime: middleDate, contents: new Buffer('some content') });
-            lessChanged.__set__('ListImports', {
+            let listImports = {
                 listImports: function() {
                     return new Promise((resolve, reject) => resolve(['import.less']));
                 }
-            });
+            };
+
+            lessChanged = getLessChanged(fs, listImports);
 
             fs.file('main.css', { mtime: newerDate });
 
@@ -288,18 +293,20 @@ describe('gulp-less-changed', () => {
     describe('when passed a file with an import that doesn\'t exist', () => {
         let lessChangedStream;
         let fakeFile;
+        let lessChanged;
 
         beforeEach(() => {
             let date = new Date();
 
             let fs = new FakeFs();
-            lessChanged.__set__('fs', fs);
 
-            lessChanged.__set__('ListImports', {
+            let listImports = {
                 listImports: function() {
                     return new Promise((resolve, reject) => resolve(['missing.less']));
                 }
-            });
+            };
+
+            lessChanged = getLessChanged(fs, listImports);
 
             fs.file('main.css', { mtime: date });
 
@@ -324,7 +331,7 @@ describe('gulp-less-changed', () => {
         newerDate.setDate(newerDate.getDate() + 1);
 
         let fs = new FakeFs();
-        lessChanged.__set__('fs', fs);
+        let lessChanged = getLessChanged(fs);
 
         fs.file('something.different.ext', { mtime: newerDate });
 
