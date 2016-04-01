@@ -20,7 +20,7 @@ module listImports {
                 if (!importedFile) {
                     importedFile = mimeType;
                 }
-                let importPath = path.join(this.currentFileInfo.currentDirectory, importedFile.value);
+                let importPath = path.normalize(path.join(this.currentFileInfo.entryPath, importedFile.value));
                 if (self._imports.indexOf(importPath) < 0) {
                     self._imports.push(importPath);
                 }
