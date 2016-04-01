@@ -3,6 +3,7 @@
     "devDependencies": {},
     "ambientDependencies": {
         "Q": "github:DefinitelyTyped/DefinitelyTyped/q/Q.d.ts#aae1368c8ee377f6e9c59c2d6faf1acb3ece7e05",
+        "bluebird": "registry:dt/bluebird#2.0.0+20160319051630",
         "chalk": "github:DefinitelyTyped/DefinitelyTyped/chalk/chalk.d.ts#5d4a87811a8282f01bc1cdf2156020d78515fa2e",
         "gulp-util": "github:DefinitelyTyped/DefinitelyTyped/gulp-util/gulp-util.d.ts#5d4a87811a8282f01bc1cdf2156020d78515fa2e",
         "less": "registry:dt/less#0.0.0+20160317120654",

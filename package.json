@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/bingnz/gulp-less-changed#readme",
   "devDependencies": {
+    "bluebird": "^3.3.4",
     "chai": "^3.5.0",
     "fake-fs": "^0.5.0",
     "gulp": "^3.9.0",

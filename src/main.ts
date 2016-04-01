@@ -1,5 +1,6 @@
 'use strict';
 
+import * as Promise from 'bluebird';
 import * as through from 'through2';
 import * as q from 'q';
 import * as fs from 'fs';
@@ -16,7 +17,7 @@ module gulpLessChanged {
     }
 
     function checkImportsHaveChanged(file: vinyl, mainFileDate: Date) {
-        function importHasChanged(file: vinyl, path: string): Q.Promise<boolean> {
+        function importHasChanged(path: string): Q.Promise<boolean> {
             return q.nfcall(fs.stat.bind(fs), path)
                 .then((stats: fs.Stats) => {
                     return stats.mtime > mainFileDate;
@@ -24,7 +25,7 @@ module gulpLessChanged {
         }
 
         function fileImportHasChanged(path: string): Q.Promise<boolean> {
-            return importHasChanged(file, path);
+            return importHasChanged(path);
         }
 
         return ListImports.listImports(file)
