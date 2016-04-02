@@ -65,8 +65,7 @@ module gulpLessChanged {
                         return { outputAge: null, changed: true };
                     }
 
-                    this.emit('error', new gutil.PluginError(MODULE_NAME, 'Error processing \'' + file.path + '\': ' + error));
-                    return { outputAge: null, changed: false };
+                    throw error;
                 })
                 .then((intermediateResult: IntermediateResult) => {
                     if (intermediateResult.changed) {
@@ -80,7 +79,11 @@ module gulpLessChanged {
                         this.push(file);
                     }
                 })
-                .then(() => callback(null, null));
+                .then(() => callback(null, null))
+                .catch(error => {
+                    this.emit('error', new gutil.PluginError(MODULE_NAME, `Error processing \'${file.path}\': ${error}`));
+                    callback(null, null);
+                });
         }
         
         return through.obj(transform);
