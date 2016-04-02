@@ -6,6 +6,7 @@ var q = require('q');
 var fs = require('fs');
 var path = require('path');
 var process = require('process');
+var through = require('through2');
 
 var listImports = require('../release/list-imports').listImports;
 
@@ -23,9 +24,18 @@ function readFile(file) {
     });
 }
 
-function readFileAsStream(file) {
+function toBytes(data, enc, callback) {
+    this.emit('data', new Uint8Array(data));
+    callback(null, null);
+}
+
+function readFileAsStream(file, type) {
     return new Promise((resolve, reject) => {
-        file.contents = fs.createReadStream(file.path, { autoClose: true });
+        let stream = fs.createReadStream(file.path, { autoClose: true });
+        if (type === 'byte') {
+            stream = stream.pipe(through(toBytes));
+        }
+        file.contents = stream;
         process.nextTick(() => resolve(file));
     });
 }
@@ -104,7 +114,7 @@ describe('list-imports', () => {
         });
     });
 
-    describe('when passing in a file as a stream', () => {
+    describe('when passing in a file as a buffered stream', () => {
         const filePath = './test/list-imports-cases/file-with-recursive-imports/file.less';
         it('should return the imports', () => {
             return readFileAsStream(new File({ path: filePath }))
@@ -115,4 +125,16 @@ describe('list-imports', () => {
                 ]));
         });
     });
+    
+    describe('when passing in a file as a byte stream', () => {
+        const filePath = './test/list-imports-cases/file-with-recursive-imports/file.less';
+        it('should return the imports', () => {
+            return readFileAsStream(new File({ path: filePath }), 'byte')
+                .then(f => listImports(f))
+                .then(importList => expect(importList.sort().map(x => x.split(path.sep).join('!'))).to.deep.equal([
+                    'test!list-imports-cases!file-with-recursive-imports!import1.less',
+                    'test!list-imports-cases!file-with-recursive-imports!import2.less'
+                ]));
+        });
+    });    
 });
