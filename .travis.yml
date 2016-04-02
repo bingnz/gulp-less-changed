@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "node"
+  - 'stable'
 
 before_script:
   - npm install -g gulp
@@ -9,4 +9,8 @@ before_script:
 script:
   - typings install
   - gulp
+
+after_script:
+  - npm run-script send-coverage
+
 

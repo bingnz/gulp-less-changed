@@ -5,6 +5,9 @@
 Analyses LESS files and their dependencies, i.e., imports and files included using `data-uri`, to save wasting time
 regenerating output.
 
+[![Build Status](https://travis-ci.org/bingnz/gulp-less-changed.svg?branch=master)](https://travis-ci.org/bingnz/gulp-less-changed)
+[![Coverage Status](https://coveralls.io/repos/github/bingnz/gulp-less-changed/badge.svg?branch=master)](https://coveralls.io/github/bingnz/gulp-less-changed?branch=master)
+
 ## Install
 
 ```
