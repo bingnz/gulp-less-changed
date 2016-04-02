@@ -2,35 +2,31 @@
 
 import * as Promise from 'bluebird';
 import * as through from 'through2';
-import * as q from 'q';
 import * as fs from 'fs';
 import * as gutil from 'gulp-util';
 import * as ListImports from './list-imports';
-import * as async from 'async-q';
-import vinyl = require('vinyl');
+import { FileInfo } from './import-buffer';
+import File = require('vinyl');
+
+const fsAsync = Promise.promisifyAll(fs);
 
 const MODULE_NAME = 'gulp-less-changed';
 
 module gulpLessChanged {
+
     export interface PluginOptions {
         getOutputFileName?: (input: string) => string
     }
 
-    function checkImportsHaveChanged(file: vinyl, mainFileDate: Date) {
-        function importHasChanged(path: string): Q.Promise<boolean> {
-            return q.nfcall(fs.stat.bind(fs), path)
-                .then((stats: fs.Stats) => {
-                    return stats.mtime > mainFileDate;
-                });
-        }
+    function checkImportsHaveChanged(file: File, mainFileDate: Date) {
 
-        function fileImportHasChanged(path: string): Q.Promise<boolean> {
-            return importHasChanged(path);
+        function importHasChanged(importFile: FileInfo): boolean {
+            return importFile.stat.mtime > mainFileDate;
         }
 
         return ListImports.listImports(file)
             .then(imports => {
-                return async.some(imports, fileImportHasChanged);
+                return imports.some(importHasChanged);
             })
     }
     
@@ -43,7 +39,7 @@ module gulpLessChanged {
         options = options || {};
         let getOutputFileName = options.getOutputFileName || (input => gutil.replaceExtension(input, '.css'));
 
-        function transform(file: vinyl, enc: string, callback: (error: any, data: any) => any) {
+        function transform(file: File, enc: string, callback: (error: any, data: any) => any) {
 
             if (file.isNull()) {
                 return callback(null, null);
@@ -51,7 +47,7 @@ module gulpLessChanged {
 
             let outputFile = getOutputFileName(file.path);
 
-            q.nfcall(fs.stat.bind(fs), outputFile)
+            fsAsync.statAsync(outputFile)
                 .then((stats: fs.Stats) => {
                     if (stats.mtime < file.stat.mtime) {
                         this.push(file);
@@ -59,7 +55,7 @@ module gulpLessChanged {
                     }
 
                     return { outputAge: stats.mtime, changed: false };
-                }, (error: NodeJS.ErrnoException) => {
+                }, (error: NodeJS.ErrnoException): IntermediateResult => {
                     if (error.code === 'ENOENT') {
                         this.push(file);
                         return { outputAge: null, changed: true };
@@ -69,7 +65,7 @@ module gulpLessChanged {
                 })
                 .then((intermediateResult: IntermediateResult) => {
                     if (intermediateResult.changed) {
-                        return false;
+                        return Promise.resolve(false);
                     }
 
                     return checkImportsHaveChanged(file, intermediateResult.outputAge).catch(reason => false);
@@ -80,7 +76,7 @@ module gulpLessChanged {
                     }
                 })
                 .then(() => callback(null, null))
-                .catch(error => {
+                .catch((error: any) => {
                     this.emit('error', new gutil.PluginError(MODULE_NAME, `Error processing \'${file.path}\': ${error}`));
                     callback(null, null);
                 });

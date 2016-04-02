@@ -1,11 +1,14 @@
 'use strict';
 
-import vinyl = require('vinyl');
+import File = require('vinyl');
 import * as less from 'less';
 import * as path from 'path';
 import streamToArray = require('stream-to-array');
+import * as Promise from 'bluebird';
+import { ImportBuffer, FileInfo } from './import-buffer';
 
 module listImports {
+
     class dataUriPlugin {
         private _imports: string[];
 
@@ -32,7 +35,7 @@ module listImports {
         }
     }
 
-    function getLessData(file: vinyl): Promise<string> {
+    function getLessData(file: File): Promise<string> {
         if (file.isBuffer()) {
             return new Promise<string>((resolve, reject) => {
                 process.nextTick(() => resolve(file.contents.toString()));
@@ -50,7 +53,7 @@ module listImports {
             });
     }
 
-    export function listImports(file: vinyl): Promise<string[]> {
+    function listImportsInternal(file: File): Promise<string[]> {
         return new Promise<string[]>((resolve, reject) => {
             if (file == null || file.isNull()) {
                 console.error('Trying to process imports for null file.')
@@ -73,6 +76,12 @@ module listImports {
                         });
                 })
         });
+    }
+
+    let importBuffer = new ImportBuffer(listImportsInternal);
+
+    export function listImports(file: File): Promise<FileInfo[]> {
+        return importBuffer.listImports(file);
     }
 }
 

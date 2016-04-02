@@ -7,10 +7,26 @@ var fs = require('fs');
 var path = require('path');
 var process = require('process');
 var through = require('through2');
+var Promise = require('bluebird');
+var proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 
-var listImports = require('../release/list-imports').listImports;
+const fsAsync = Promise.promisifyAll(fs);
 
-var expect = chai.expect;
+const expect = chai.expect;
+
+var getListImports = function() {
+    let importBufferStub = {
+        'ImportBuffer': function (lister) {
+            return {
+                'listImports': inputFile =>
+                    lister(inputFile).then(files =>
+                        Promise.map(files, file =>
+                            fsAsync.statAsync(file).then(stat => {
+                                return { path: file, stat: stat } })))}}};
+
+    let lessChanged = proxyquire('../release/list-imports', { './import-buffer': importBufferStub });
+    return lessChanged;
+};
 
 function readFile(file) {
     return new Promise((resolve, reject) => {
@@ -41,6 +57,11 @@ function readFileAsStream(file, type) {
 }
 
 describe('list-imports', () => {
+    let listImports;
+    beforeEach(() => {
+        listImports = getListImports().listImports;
+    });
+
     describe('when passing in a null file', () => {
         it('should return an empty list of imports', () => {
             return listImports(null)
@@ -76,7 +97,7 @@ describe('list-imports', () => {
         it('should return the single import', () => {
             return readFile(new File({ path: filePath }))
                 .then(f => listImports(f))
-                .then(importList => expect(importList.map(x => x.split(path.sep).join('!'))).to.deep.equal([
+                .then(importList => expect(importList.map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
                     'test!list-imports-cases!file-with-import!import.less']));
         });
     });
@@ -86,7 +107,7 @@ describe('list-imports', () => {
         it('should return the imports', () => {
             return readFile(new File({ path: filePath }))
                 .then(f => listImports(f))
-                .then(importList => expect(importList.sort().map(x => x.split(path.sep).join('!'))).to.deep.equal([
+                .then(importList => expect(importList.sort().map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
                     'test!list-imports-cases!file-with-recursive-imports!import1.less',
                     'test!list-imports-cases!file-with-recursive-imports!import2.less'
                 ]));
@@ -98,7 +119,7 @@ describe('list-imports', () => {
         it('should return the referenced image as an import', () => {
             return readFile(new File({ path: filePath }))
                 .then(f => listImports(f))
-                .then(importList => expect(importList.map(x => x.split(path.sep).join('!'))).to.deep.equal([
+                .then(importList => expect(importList.map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
                     'test!list-imports-cases!file-with-data-uri!image.svg']));
         });
     });
@@ -108,7 +129,7 @@ describe('list-imports', () => {
         it('should return the referenced image and file as imports', () => {
             return readFile(new File({ path: filePath }))
                 .then(f => listImports(f))
-                .then(importList => expect(importList.sort().map(x => x.split(path.sep).join('!'))).to.deep.equal([
+                .then(importList => expect(importList.map(x => x.path).sort().map(x => x.split(path.sep).join('!'))).to.deep.equal([
                     'test!list-imports-cases!file-with-data-uri-mime-type!image.svg',
                     'test!list-imports-cases!file-with-data-uri-mime-type!x.less']));
         });
@@ -119,7 +140,7 @@ describe('list-imports', () => {
         it('should return the imports', () => {
             return readFileAsStream(new File({ path: filePath }))
                 .then(f => listImports(f))
-                .then(importList => expect(importList.sort().map(x => x.split(path.sep).join('!'))).to.deep.equal([
+                .then(importList => expect(importList.map(x => x.path).sort().map(x => x.split(path.sep).join('!'))).to.deep.equal([
                     'test!list-imports-cases!file-with-recursive-imports!import1.less',
                     'test!list-imports-cases!file-with-recursive-imports!import2.less'
                 ]));
@@ -131,10 +152,10 @@ describe('list-imports', () => {
         it('should return the imports', () => {
             return readFileAsStream(new File({ path: filePath }), 'byte')
                 .then(f => listImports(f))
-                .then(importList => expect(importList.sort().map(x => x.split(path.sep).join('!'))).to.deep.equal([
+                .then(importList => expect(importList.sort().map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
                     'test!list-imports-cases!file-with-recursive-imports!import1.less',
                     'test!list-imports-cases!file-with-recursive-imports!import2.less'
                 ]));
         });
-    });    
+    });
 });

@@ -9,7 +9,6 @@
         "less": "registry:dt/less#0.0.0+20160317120654",
         "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#1c56e368e17bb28ca57577250624ca5bd561aa81",
         "through2": "github:DefinitelyTyped/DefinitelyTyped/through2/through2.d.ts#48f20e97bfaf70fc1a9537b38aed98e9749be0ae",
-        "vinyl": "github:DefinitelyTyped/DefinitelyTyped/vinyl/vinyl.d.ts#70a1f40bc8ef810b4272d37553cf86c6785be7f8",
-        "vinyl-fs": "github:DefinitelyTyped/DefinitelyTyped/vinyl-fs/vinyl-fs.d.ts#ada9bfca7db827a4d9962a23e7647189cc80370f"
+        "vinyl": "github:DefinitelyTyped/DefinitelyTyped/vinyl/vinyl.d.ts#70a1f40bc8ef810b4272d37553cf86c6785be7f8"
     }
 }

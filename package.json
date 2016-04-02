@@ -24,7 +24,6 @@
   },
   "homepage": "https://github.com/bingnz/gulp-less-changed#readme",
   "devDependencies": {
-    "bluebird": "^3.3.4",
     "chai": "^3.5.0",
     "coveralls": "^2.11.9",
     "fake-fs": "^0.5.0",
@@ -40,16 +39,14 @@
     "sinon": "^1.17.3",
     "stream-assert": "^2.0.3",
     "through2": "^2.0.0",
-    "typescript": "^1.7.5",
-    "vinyl": "^1.1.1",
-    "vinyl-fs": "^2.3.1"
+    "typescript": "^1.7.5"
   },
   "dependencies": {
-    "async-q": "^0.3.1",
+    "bluebird": "^3.3.4",
     "gulp-util": "^3.0.7",
     "less": "^2.6.0",
-    "q": "^1.4.1",
     "stream-to-array": "^2.3.0",
-    "through2": "^2.0.1"
+    "through2": "^2.0.1",
+    "vinyl": "^1.1.1"
   }
 }

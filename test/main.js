@@ -1,18 +1,16 @@
 'use strict';
 var chai = require('chai');
 var File = require('vinyl');
-var vinylFs = require('vinyl-fs');
 var FakeFs = require('fake-fs');
 var streamAssert = require('stream-assert');
 var sinon = require('sinon');
 var proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 
-var expect = chai.expect;
+const expect = chai.expect;
 
 var getLessChanged = function(fs, listImports) {
     let fsStub = fs || new FakeFs();
     let listImportsStub = listImports || { listImports: function() { return new Promise((resolve, reject) => resolve([])); } };
-
     let lessChanged = proxyquire('../release/main', { './list-imports': listImportsStub, 'fs': fsStub });
     return lessChanged;
 };
@@ -185,10 +183,9 @@ describe('gulp-less-changed', () => {
 
             let fs = new FakeFs();
 
-            fs.file('import.less', { mtime: date, contents: new Buffer('some content') });
             let listImports = {
                 listImports: function() {
-                    return new Promise((resolve, reject) => resolve(['import.less']));
+                    return new Promise((resolve, reject) => resolve([ { path: 'import.less', stat: { mtime: date } } ]));
                 }
             };
             
@@ -223,10 +220,9 @@ describe('gulp-less-changed', () => {
 
             let fs = new FakeFs();
 
-            fs.file('import.less', { mtime: newerDate, contents: new Buffer('some content') });
             let listImports = {
                 listImports: function() {
-                    return new Promise((resolve, reject) => resolve(['import.less']));
+                    return new Promise((resolve, reject) => resolve([ { path: 'import.less', stat: { mtime: newerDate } }]));
                 }
             };
 
@@ -264,10 +260,9 @@ describe('gulp-less-changed', () => {
 
             let fs = new FakeFs();
 
-            fs.file('import.less', { mtime: middleDate, contents: new Buffer('some content') });
             let listImports = {
                 listImports: function() {
-                    return new Promise((resolve, reject) => resolve(['import.less']));
+                    return new Promise((resolve, reject) => resolve([{ path: 'import.less', stat: { mtime: middleDate } }]));
                 }
             };
 
@@ -302,7 +297,7 @@ describe('gulp-less-changed', () => {
 
             let listImports = {
                 listImports: function() {
-                    return new Promise((resolve, reject) => resolve(['missing.less']));
+                    return new Promise((resolve, reject) => resolve([{ path: 'missing.less', stat: null }]));
                 }
             };
 
