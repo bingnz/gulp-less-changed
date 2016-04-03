@@ -1,8 +1,18 @@
+sudo: false
 language: node_js
+
+cache:
+  directories:
+    - node_modules
+
+notifications:
+  email: false
+
 node_js:
   - 'stable'
 
 before_script:
+  - npm prune
   - npm install -g gulp
   - npm install -g typings
   - typings install
@@ -10,4 +20,9 @@ before_script:
 after_script:
   - npm run-script send-coverage
 
+after_success:
+  - npm run semantic-release
 
+branches:
+  except:
+    - "/^v\\d+\\.\\d+\\.\\d+$/"

@@ -1,15 +1,16 @@
 {
   "name": "gulp-less-changed",
-  "version": "1.0.0",
+  "version": "0.0.0-semantically-released",
   "description": "Only pass .less files through the gulp stream if they or their dependencies have changed",
   "main": "release/main.js",
   "scripts": {
     "test": "gulp run-tests",
-    "send-coverage": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+    "send-coverage": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bingnz/gulp-less-changed.git"
+    "url": "https://github.com/bingnz/gulp-less-changed.git"
   },
   "keywords": [
     "gulpplugin",
@@ -39,7 +40,8 @@
     "sinon": "^1.17.3",
     "stream-assert": "^2.0.3",
     "through2": "^2.0.0",
-    "typescript": "^1.7.5"
+    "typescript": "^1.7.5",
+    "semantic-release": "^4.3.5"
   },
   "dependencies": {
     "bluebird": "^3.3.4",
