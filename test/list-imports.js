@@ -2,7 +2,6 @@
 
 var chai = require('chai');
 var File = require('vinyl');
-var q = require('q');
 var fs = require('fs');
 var path = require('path');
 var process = require('process');
@@ -29,15 +28,11 @@ var getListImports = function() {
 };
 
 function readFile(file) {
-    return new Promise((resolve, reject) => {
-        q.nfcall(fs.readFile.bind(fs), file.path)
+    return fsAsync.readFileAsync(file.path)
             .then(data => {
                 file.contents = data;
-                resolve(file);
-            }, reason => {
-                reject(reason);
+                return file;
             });
-    });
 }
 
 function toBytes(data, enc, callback) {
