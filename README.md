@@ -84,6 +84,9 @@ gulp.task('default', () => {
 });
 ```
 
+As an optimisation, the import list for each file is kept in memory. If all of the imports for a particular file have the same timestamp,
+the import list for that file is assumed to be the same. This helps to speed up incremental builds.
+
 ## API
 
 ### lessChanged()
