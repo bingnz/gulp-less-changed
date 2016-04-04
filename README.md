@@ -8,6 +8,8 @@ regenerating output.
 [![Build Status](https://travis-ci.org/bingnz/gulp-less-changed.svg?branch=master)](https://travis-ci.org/bingnz/gulp-less-changed)
 [![Coverage Status](https://coveralls.io/repos/github/bingnz/gulp-less-changed/badge.svg?branch=master)](https://coveralls.io/github/bingnz/gulp-less-changed?branch=master)
 
+[![Dependency Status](https://david-dm.org/bingnz/gulp-less-changed.svg)](https://david-dm.org/bingnz/gulp-less-changed)
+
 ## Install
 
 ```
