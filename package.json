@@ -34,7 +34,7 @@
     "gulp-mocha": "^2.2.0",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-typescript": "^2.12.1",
-    "merge2": "^1.0.0",
+    "merge2": "^1.0.2",
     "mocha": "^2.4.5",
     "proxyquire": "^1.7.4",
     "sinon": "^1.17.3",
