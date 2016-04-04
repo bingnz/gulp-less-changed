@@ -30,12 +30,15 @@ module listImports {
         private modifiedTimeIsTheSame(info: FileInfo): Promise<any> {
             return fsAsync.statAsync(info.path)
                 .then((stat: fs.Stats): Promise<any> => {
-
                     let same = stat.mtime.getTime() === info.stat.mtime.getTime();
                     if (!same) {
                         return Promise.reject(new ExpectedError('changed'));
                     }
                     return Promise.resolve(same);
+                })
+                .catch(() => {
+                    // if this is an ongoing error it will be reported next time around.
+                    return Promise.reject(new ExpectedError('changed'));
                 });
         }
 
@@ -45,11 +48,25 @@ module listImports {
                 return this.importLister(file)
                     .then((files: string[]) => {
                         return Promise.map(files, file =>
-                            fsAsync.statAsync(file).then((stat: fs.Stats) => { return { path: file, stat: stat } }))
+                            fsAsync.statAsync(file)
+                                .catch(Error, (error: NodeJS.ErrnoException) => {
+                                    if (error.code === 'ENOENT') {
+                                        console.error(`Import '${file}' not found.`);
+                                        return Promise.resolve(null);
+                                    }
+                                    return Promise.reject(error);
+                                })
+                                .then((stat: fs.Stats) => { return { path: file, stat: stat } }))
+
                     })
                     .then((results: FileInfo[]) => {
-                        this.importCache[file.path] = results;
-                        return results;
+                        let successfulResults = results.filter(info => !!info.stat);
+                        this.importCache[file.path] = successfulResults;
+                        return successfulResults;
+                    })
+                    .catch(error => {
+                        console.error(`An unknown error occurred: ${error}`);
+                        return [];
                     });
             }
 
