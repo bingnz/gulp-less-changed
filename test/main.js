@@ -8,9 +8,19 @@ var proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 
 const expect = chai.expect;
 
-var getLessChanged = function(fs, listImports) {
-    let fsStub = fs || new FakeFs();
-    let listImportsStub = listImports || { listImports: function() { return new Promise((resolve, reject) => resolve([])); } };
+var getLessChanged = function(options) {
+    options = options || {};
+    let fsStub = options.fs || new FakeFs();
+    let listImportsStub = options.listImports || {
+        ImportLister: function() {
+            return {
+                listImports: function() {
+                    return new Promise((resolve, reject) => resolve([]));
+                }
+            }
+        }
+    };
+
     let lessChanged = proxyquire('../release/main', { './list-imports': listImportsStub, 'fs': fsStub });
     return lessChanged;
 };
@@ -23,7 +33,7 @@ describe('gulp-less-changed', () => {
         lessChangedStream.write(new File());
         lessChangedStream.end();
 
-        it('should not pass any file onto the stream', (done) => {
+        it('should not pass any file onto the stream', done => {
             lessChangedStream
                 .pipe(streamAssert.length(0))
                 .pipe(streamAssert.end(done))
@@ -34,7 +44,7 @@ describe('gulp-less-changed', () => {
     describe('when passed a file with no imports that has not changed', () => {
         let date = new Date();
         let fs = new FakeFs();
-        let lessChanged = getLessChanged(fs);
+        let lessChanged = getLessChanged({ fs: fs });
 
         fs.file('something.css', { mtime: date });
 
@@ -43,7 +53,7 @@ describe('gulp-less-changed', () => {
         lessChangedStream.write(fakeFile);
         lessChangedStream.end();
 
-        it('should not pass any file onto the stream', (done) => {
+        it('should not pass any file onto the stream', done => {
             lessChangedStream
                 .pipe(streamAssert.length(0))
                 .pipe(streamAssert.end(done))
@@ -57,7 +67,7 @@ describe('gulp-less-changed', () => {
         newerDate.setDate(newerDate.getDate() + 1);
 
         let fs = new FakeFs();
-        let lessChanged = getLessChanged(fs);
+        let lessChanged = getLessChanged({ fs: fs });
 
         fs.file('something.css', { mtime: newerDate });
 
@@ -66,7 +76,7 @@ describe('gulp-less-changed', () => {
         lessChangedStream.write(fakeFile);
         lessChangedStream.end();
 
-        it('should not pass any file onto the stream', (done) => {
+        it('should not pass any file onto the stream', done => {
             lessChangedStream
                 .pipe(streamAssert.length(0))
                 .pipe(streamAssert.end(done))
@@ -81,7 +91,7 @@ describe('gulp-less-changed', () => {
         newerDate.setDate(newerDate.getDate() + 1);
 
         let fs = new FakeFs();
-        let lessChanged = getLessChanged(fs);
+        let lessChanged = getLessChanged({ fs: fs });
 
         fs.file('hello.css', { mtime: olderDate });
 
@@ -91,7 +101,7 @@ describe('gulp-less-changed', () => {
         lessChangedStream.write(fakeLessFile);
         lessChangedStream.end();
 
-        it('should pass the file onto the stream', (done) => {
+        it('should pass the file onto the stream', done => {
             lessChangedStream
                 .pipe(streamAssert.length(1))
                 .pipe(streamAssert.first(item => expect(item).to.equal(fakeLessFile)))
@@ -105,7 +115,7 @@ describe('gulp-less-changed', () => {
         let date = new Date();
 
         let fs = new FakeFs();
-        let lessChanged = getLessChanged(fs);
+        let lessChanged = getLessChanged({ fs: fs });
 
         fs.file('hello.css', { mtime: date });
 
@@ -120,7 +130,7 @@ describe('gulp-less-changed', () => {
         let lessChangedStream = lessChanged();
         lessChangedStream.write(fakeLessFile);
         lessChangedStream.end();
-        it('should pass the file onto the stream', (done) => {
+        it('should pass the file onto the stream', done => {
             lessChangedStream
                 .pipe(streamAssert.length(1))
                 .pipe(streamAssert.first(item => expect(item).to.equal(fakeLessFile)))
@@ -133,12 +143,12 @@ describe('gulp-less-changed', () => {
         let fakeLessFile;
         let lessChangedStream;
         let lessChanged;
-        
+
         beforeEach(() => {
             let date = new Date();
 
             let fs = new FakeFs();
-            lessChanged = getLessChanged(fs);
+            lessChanged = getLessChanged({ fs: fs });
 
             fs.file('hello.css', { mtime: date });
 
@@ -153,7 +163,7 @@ describe('gulp-less-changed', () => {
             lessChangedStream = lessChanged();
         });
 
-        it('should emit an error to the stream', (done) => {
+        it('should emit an error to the stream', done => {
             let errorOccurred = false;
 
             lessChangedStream.once('error', error => {
@@ -183,13 +193,17 @@ describe('gulp-less-changed', () => {
 
             let fs = new FakeFs();
 
-            let listImports = {
-                listImports: function() {
-                    return new Promise((resolve, reject) => resolve([ { path: 'import.less', stat: { mtime: date } } ]));
+            let importLister = {
+                ImportLister: function() {
+                    return {
+                        listImports: function() {
+                            return new Promise((resolve, reject) => resolve([{ path: 'import.less', stat: { mtime: date } }]));
+                        }
+                    }
                 }
             };
-            
-            lessChanged = getLessChanged(fs, listImports);
+
+            lessChanged = getLessChanged({ fs: fs, listImports: importLister });
 
             fs.file('main.css', { mtime: date });
 
@@ -197,7 +211,7 @@ describe('gulp-less-changed', () => {
             lessChangedStream = lessChanged();
         });
 
-        it('should not pass the file onto the stream', (done) => {
+        it('should not pass the file onto the stream', done => {
             lessChangedStream.write(fakeFile);
             lessChangedStream.end();
 
@@ -220,21 +234,25 @@ describe('gulp-less-changed', () => {
 
             let fs = new FakeFs();
 
-            let listImports = {
-                listImports: function() {
-                    return new Promise((resolve, reject) => resolve([ { path: 'import.less', stat: { mtime: newerDate } }]));
+            let importLister = {
+                ImportLister: function() {
+                    return {
+                        listImports: function() {
+                            return new Promise((resolve, reject) => resolve([{ path: 'import.less', stat: { mtime: newerDate } }]));
+                        }
+                    }
                 }
             };
 
             fs.file('main.css', { mtime: olderDate });
-            
-            lessChanged = getLessChanged(fs, listImports);
+
+            lessChanged = getLessChanged({ fs: fs, listImports: importLister });
 
             fakeFile = new File({ path: 'main.less', stat: { mtime: olderDate }, contents: new Buffer('@import \'import.less\';') });
             lessChangedStream = lessChanged();
         });
 
-        it('should pass the file onto the stream', (done) => {
+        it('should pass the file onto the stream', done => {
             lessChangedStream.write(fakeFile);
             lessChangedStream.end();
 
@@ -260,13 +278,17 @@ describe('gulp-less-changed', () => {
 
             let fs = new FakeFs();
 
-            let listImports = {
-                listImports: function() {
-                    return new Promise((resolve, reject) => resolve([{ path: 'import.less', stat: { mtime: middleDate } }]));
+            let importLister = {
+                ImportLister: function() {
+                    return {
+                        listImports: function() {
+                            return new Promise((resolve, reject) => resolve([{ path: 'import.less', stat: { mtime: middleDate } }]));
+                        }
+                    }
                 }
             };
 
-            lessChanged = getLessChanged(fs, listImports);
+            lessChanged = getLessChanged({ fs: fs, listImports: importLister });
 
             fs.file('main.css', { mtime: newerDate });
 
@@ -274,7 +296,7 @@ describe('gulp-less-changed', () => {
             lessChangedStream = lessChanged();
         });
 
-        it('should not pass the file onto the stream', (done) => {
+        it('should not pass the file onto the stream', done => {
             lessChangedStream.write(fakeFile);
             lessChangedStream.end();
 
@@ -295,13 +317,7 @@ describe('gulp-less-changed', () => {
 
             let fs = new FakeFs();
 
-            let listImports = {
-                listImports: function() {
-                    return new Promise((resolve, reject) => resolve([{ path: 'missing.less', stat: null }]));
-                }
-            };
-
-            lessChanged = getLessChanged(fs, listImports);
+            lessChanged = getLessChanged({ fs: fs });
 
             fs.file('main.css', { mtime: date });
 
@@ -309,7 +325,7 @@ describe('gulp-less-changed', () => {
             lessChangedStream = lessChanged();
         });
 
-        it('should not pass the file onto the stream', (done) => {
+        it('should not pass the file onto the stream', done => {
             lessChangedStream.write(fakeFile);
             lessChangedStream.end();
 
@@ -326,7 +342,7 @@ describe('gulp-less-changed', () => {
         newerDate.setDate(newerDate.getDate() + 1);
 
         let fs = new FakeFs();
-        let lessChanged = getLessChanged(fs);
+        let lessChanged = getLessChanged({ fs: fs });
 
         fs.file('something.different.ext', { mtime: newerDate });
 
@@ -335,11 +351,120 @@ describe('gulp-less-changed', () => {
         lessChangedStream.write(fakeFile);
         lessChangedStream.end();
 
-        it('should look for the correct output file', (done) => {
+        it('should look for the correct output file', done => {
             lessChangedStream
                 .pipe(streamAssert.length(0))
                 .pipe(streamAssert.end(done))
                 .once('assertion', done);
+        });
+    });
+
+    describe('when no options are provided', () => {
+        it('should pass the input file to the import lister', done => {
+            let fs = new FakeFs();
+            let date = new Date();
+
+            let listImports = {
+                listImports: function() {
+                    return Promise.resolve([]);
+                }};
+            let importLister = {
+                ImportLister: function() {
+                    return listImports; 
+                    }
+                };
+
+            sinon.spy(listImports, 'listImports');
+
+            fs.file('main.css', { mtime: date });
+
+            let lessChanged = getLessChanged({ fs: fs, listImports: importLister });
+
+            let fakeFile = new File({ path: 'main.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+            let lessChangedStream = lessChanged();
+
+            lessChangedStream.write(fakeFile);
+            lessChangedStream.end();
+
+            lessChangedStream
+                .pipe(streamAssert.end(() => {
+                    expect(listImports.listImports).to.have.been.calledWith(fakeFile);
+                    done();
+                }));
+        });
+    });
+
+    describe('when the \'paths\' option is provided', () => {
+        it('should pass the import file to the import lister list function', done => {
+            let fs = new FakeFs();
+            let date = new Date();
+            const path1 = 'path1';
+            const path2 = 'path/2/';
+
+            let listImports = {
+                listImports: function() {
+                    return Promise.resolve([]);
+                }
+            };
+            let importLister = {
+                ImportLister: function() {
+                    return listImports; 
+                    }
+                };
+
+            sinon.spy(listImports, 'listImports');
+
+            fs.file('main.css', { mtime: date });
+
+            let lessChanged = getLessChanged({ fs: fs, listImports: importLister });
+
+            let fakeFile = new File({ path: 'main.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+            let lessChangedStream = lessChanged({ paths: [path1, path2] });
+
+            lessChangedStream.write(fakeFile);
+            lessChangedStream.end();
+
+            lessChangedStream
+                .pipe(streamAssert.end(() => {
+                    expect(listImports.listImports).to.have.been.calledWith(fakeFile)
+                    done();
+                }));
+        });
+
+        it('should pass the paths to the import lister', done => {
+            let fs = new FakeFs();
+            let date = new Date();
+            const path1 = 'path1';
+            const path2 = 'path/2/';
+
+            let listImports = {
+                listImports: function() {
+                    return Promise.resolve([]);
+                }
+            };
+            let importLister = {
+                ImportLister: function() {
+                    return listImports; 
+                    }
+                };
+
+            sinon.spy(importLister, 'ImportLister');
+
+            fs.file('main.css', { mtime: date });
+
+            let lessChanged = getLessChanged({ fs: fs, listImports: importLister });
+
+            let fakeFile = new File({ path: 'main.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+            let lessChangedStream = lessChanged({ paths: [path1, path2] });
+
+            lessChangedStream.write(fakeFile);
+            lessChangedStream.end();
+
+            lessChangedStream
+                .pipe(streamAssert.end(() => {
+                    expect(importLister.ImportLister).to.have.been.calledWith([path1, path2])
+                    done();
+                }));
         });
     });
 });

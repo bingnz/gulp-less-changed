@@ -7,7 +7,7 @@ import streamToArray = require('stream-to-array');
 import * as Promise from 'bluebird';
 import { ImportBuffer, FileInfo } from './import-buffer';
 
-module listImports {
+module importLister {
 
     class dataUriPlugin {
         private _imports: string[];
@@ -35,55 +35,72 @@ module listImports {
         }
     }
 
-    function getLessData(file: File): Promise<string> {
-        if (file.isBuffer()) {
-            return new Promise<string>((resolve, reject) => {
-                process.nextTick(() => resolve(file.contents.toString()));
+    export class ImportLister {
+        importBuffer: ImportBuffer;
+
+        constructor(private paths: string[]) {
+            this.importBuffer = new ImportBuffer(this.listImportsInternal.bind(this));
+        }
+
+        private getLessData(file: File): Promise<string> {
+            if (file.isBuffer()) {
+                return new Promise<string>((resolve, reject) => {
+                    process.nextTick(() => resolve(file.contents.toString()));
+                });
+            }
+
+            return streamToArray(<NodeJS.ReadableStream>file.contents)
+                .then(parts => {
+                    let buffers: Buffer[] = [];
+                    for (let i = 0; i < parts.length; ++i) {
+                        let part = parts[i]
+                        buffers.push((part instanceof Buffer) ? part : new Buffer(part))
+                    }
+                    return Buffer.concat(buffers).toString();
+                });
+        }
+
+        private listImportsInternal(file: File): Promise<string[]> {
+            return new Promise<string[]>((resolve, reject) => {
+                if (file == null || file.isNull()) {
+                    console.error('Trying to process imports for null file.')
+                    return resolve([]);
+                }
+
+                let dataUri = new dataUriPlugin();
+                let options: Less.Options2 = { filename: file.path, plugins: [dataUri] };
+
+                if (this.paths) {
+                    let optionsPaths: string[] = [];
+                    optionsPaths.push(...this.paths)
+                    options.paths = optionsPaths;
+                }
+
+                this.getLessData(file)
+                    .then(lessData => {
+                        (<Less.RelaxedLessStatic>less)
+                            .render(lessData, options)
+                            .then(value => {
+                                // TODO: pass dataUri.imports to a path resolver.
+                                resolve(value.imports.concat(dataUri.imports));
+                            })
+                            .catch(reason => {
+                                console.error('Failed to process imports for \'' + file.path + '\': ' + reason);
+                                resolve([]);
+                            });
+                    })
             });
         }
 
-        return streamToArray(<NodeJS.ReadableStream>file.contents)
-            .then(parts => {
-                let buffers: Buffer[] = [];
-                for (let i = 0; i < parts.length; ++i) {
-                    let part = parts[i]
-                    buffers.push((part instanceof Buffer) ? part : new Buffer(part))
-                }
-                return Buffer.concat(buffers).toString();
-            });
-    }
-
-    function listImportsInternal(file: File): Promise<string[]> {
-        return new Promise<string[]>((resolve, reject) => {
-            if (file == null || file.isNull()) {
-                console.error('Trying to process imports for null file.')
-                return resolve([]);
+        public listImports(file: File): Promise<FileInfo[]> {
+            if (!file) {
+                return Promise.resolve([]);
             }
 
-            let dataUri = new dataUriPlugin();
-            let options = { filename: file.path, plugins: [dataUri] };
-
-            getLessData(file)
-                .then(lessData => {
-                    less
-                        .render(lessData, options)
-                        .then(value => {
-                            resolve(value.imports.concat(dataUri.imports));
-                        })
-                        .catch(reason => {
-                            console.error('Failed to process imports for \'' + file.path + '\': ' + reason);
-                            resolve([]);
-                        });
-                })
-        });
-    }
-
-    let importBuffer = new ImportBuffer(listImportsInternal);
-
-    export function listImports(file: File): Promise<FileInfo[]> {
-        return importBuffer.listImports(file);
+            return this.importBuffer.listImports(file);
+        }
     }
 }
 
-export = listImports;
+export = importLister;
 

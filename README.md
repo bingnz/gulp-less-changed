@@ -91,16 +91,18 @@ the import list for that file is assumed to be the same. This helps to speed up 
 
 ## API
 
-### lessChanged()
+### lessChanged([options])
 
-Looks for .css files in the same directory as the input LESS files. If a LESS file has a later timestamp than its corresponding
-CSS file, or if any of the LESS file's imports has a later timestamp than the CSS file, the LESS file is emitted to the stream.
+For each input LESS file in the Gulp stream, looks for the corresponding CSS file. If the LESS file has a later timestamp than its
+corresponding CSS file, or if any of the LESS file's imports has a later timestamp than the CSS file, the LESS file is emitted to the stream.
 
-### lessChanged(options)
+If no options are specified, looks for a CSS file in the same path as the LESS file with a .css extension. Otherwise:
 
  * **options.getOutputFileName** - `function` Map source paths to destination paths
    (e.g. `function(path) { return rename(path, { extname: 'min.css' }); }`)
    Overrides the default behaviour of looking for .css files in the input path.
+ * **options.paths** - `string[]` Search paths for `@import`s and files referenced using `data-uri`. This
+   works in the same way as the `paths` option for [gulp-less](https://www.npmjs.com/package/gulp-less).
 
 ## License
 
