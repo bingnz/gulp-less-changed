@@ -15,13 +15,13 @@ var getLessChanged = function(options) {
         ImportLister: function() {
             return {
                 listImports: function() {
-                    return new Promise((resolve, reject) => resolve([]));
+                    return Promise.resolve([]);
                 }
             }
         }
     };
 
-    let lessChanged = proxyquire('../release/main', { './list-imports': listImportsStub, 'fs': fsStub });
+    let lessChanged = proxyquire('../release/main', { './import-lister': listImportsStub, 'fs': fsStub });
     return lessChanged;
 };
 

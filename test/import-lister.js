@@ -32,7 +32,13 @@ var getImportLister = function(options) {
     if (lessStub) {
         proxies['less'] = lessStub;
     }
-    let listImports = proxyquire('../release/list-imports', proxies);
+
+    let resolverStub = options.pathResolver;
+    if (resolverStub) {
+        proxies['./path-resolver'] = resolverStub;
+    }
+    
+    let listImports = proxyquire('../release/import-lister', proxies);
     return listImports.ImportLister;
 };
 
@@ -90,9 +96,10 @@ describe('import-lister', () => {
 
     describe('when passing in a file with an import that can\'t be found', () => {
         let fakeFile = new File({ path: 'something.less', contents: new Buffer('@import "file2.less";') });
-        it('should return the single import', () => {
+        it('should throw an error', () => {
             return importLister.listImports(fakeFile)
-                .then(importList => expect(importList).to.be.empty);
+                .then(importList => expect.fail(0, 1, 'should have thrown an error.'))
+                .catch(error => expect(error).to.contain('Failed to process imports for '));
         });
     });
 
@@ -125,6 +132,107 @@ describe('import-lister', () => {
                 .then(f => importLister.listImports(f))
                 .then(importList => expect(importList.map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
                     'test!list-imports-cases!file-with-data-uri!image.svg']));
+        });
+
+        it('should use the path resolver to resolve the import file', () => {
+            const resolvedPath = 'some/path/image.svg';
+            let resolverFunction = {
+                resolve: function() {
+                    return Promise.resolve(resolvedPath);
+                }
+            };
+
+            let pathResolver = {
+                PathResolver: function()
+                {
+                    return resolverFunction;
+                } 
+            };
+            let importBufferStub = {
+                'ImportBuffer': function (lister) {
+                    return {
+                        'listImports': inputFile =>
+                            lister(inputFile).then(files =>
+                                Promise.map(files, file =>
+                                    Promise.resolve({ path: file, stat: { mtime: new Date() } })))}}};
+
+            sinon.spy(resolverFunction, 'resolve');
+            importLister = new (getImportLister({ pathResolver: pathResolver, importBuffer: importBufferStub }));
+
+            return readFile(new File({ path: filePath }))
+                .then(f => importLister.listImports(f))
+                .then(importList => {
+                    expect(importList.map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
+                        resolvedPath.replace(/\//g, '!')]);
+                    expect(resolverFunction.resolve).to.have.been.calledWith('test/list-imports-cases/file-with-data-uri/image.svg'.replace(/\//g, path.sep));
+                });
+        });
+
+        it('should not return import if an error occurs in the path resolution', () => {
+            let resolverFunction = {
+                resolve: function() {
+                    return Promise.reject(new Error('Some error'));
+                }
+            };
+
+            let pathResolver = {
+                PathResolver: function()
+                {
+                    return resolverFunction;
+                } 
+            };
+            let importBufferStub = {
+                'ImportBuffer': function (lister) {
+                    return {
+                        'listImports': inputFile =>
+                            lister(inputFile).then(files =>
+                                Promise.map(files, file =>
+                                    Promise.resolve({ path: file, stat: { mtime: new Date() } })))}}};
+
+            sinon.spy(resolverFunction, 'resolve');
+            importLister = new (getImportLister({ pathResolver: pathResolver, importBuffer: importBufferStub }));
+
+            return readFile(new File({ path: filePath }))
+                .then(f => importLister.listImports(f))
+                .then(() => expect.fail(1, 0, 'Should have thrown an error.'))
+                .catch(error => {
+                    expect(error).to.contain('Error: Some error');
+                });
+        });
+
+        it('should pass provided paths to the path resolver', () => {
+            const resolvedPath = 'some/path/image.svg';
+            const path1 = 'pathA';
+            const path2 = 'path/B';
+
+            let resolverFunction = {
+                resolve: function() {
+                    return Promise.resolve(resolvedPath);
+                }
+            };
+
+            let pathResolver = {
+                PathResolver: function()
+                {
+                    return resolverFunction;
+                } 
+            };
+            let importBufferStub = {
+                'ImportBuffer': function (lister) {
+                    return {
+                        'listImports': inputFile =>
+                            lister(inputFile).then(files =>
+                                Promise.map(files, file =>
+                                    Promise.resolve({ path: file, stat: { mtime: new Date() } })))}}};
+
+            sinon.spy(resolverFunction, 'resolve');
+            importLister = new (getImportLister({ pathResolver: pathResolver, importBuffer: importBufferStub }))([path1, path2]);
+
+            return readFile(new File({ path: filePath }))
+                .then(f => importLister.listImports(f))
+                .then(importList => {
+                    expect(resolverFunction.resolve).to.have.been.calledWith(sinon.match.string, [path1, path2]);
+                });
         });
     });
 

@@ -4,7 +4,7 @@ import * as Promise from 'bluebird';
 import * as through from 'through2';
 import * as fs from 'fs';
 import * as gutil from 'gulp-util';
-import { ImportLister } from './list-imports';
+import { ImportLister } from './import-lister';
 import { FileInfo } from './import-buffer';
 import File = require('vinyl');
 
