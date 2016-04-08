@@ -466,6 +466,100 @@ describe('gulp-less-changed', () => {
                     done();
                 }));
         });
+
+        it('should reuse import import lister for same paths', done => {
+            let fs = new FakeFs();
+            let date = new Date();
+            const path1 = 'path1';
+            const path2 = 'path/2/';
+
+            let listImports = {
+                listImports: function() {
+                    return Promise.resolve([]);
+                }
+            };
+            let importLister = {
+                ImportLister: function() {
+                    return listImports; 
+                    }
+                };
+
+            sinon.spy(importLister, 'ImportLister');
+
+            fs.file('main.css', { mtime: date });
+
+            let lessChanged = getLessChanged({ fs: fs, listImports: importLister });
+
+            let fakeFile1 = new File({ path: 'main.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+            let fakeFile2 = new File({ path: 'main2.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+
+            let lessChangedStream = lessChanged({ paths: [path1, path2] });
+
+            lessChangedStream.write(fakeFile1);
+            lessChangedStream.end();
+
+            lessChangedStream
+                .pipe(streamAssert.end(() => {
+                    let lessChangedStream2 = lessChanged({ paths: [path1, path2] });
+
+                    lessChangedStream2.write(fakeFile2);
+                    lessChangedStream2.end();
+
+                    lessChangedStream2
+                        .pipe(streamAssert.end(() => {
+                            expect(importLister.ImportLister).to.have.been.called.once;
+                            done();
+                        }));
+                }));
+        });
+
+        it('should create new import import lister for different paths', done => {
+            let fs = new FakeFs();
+            let date = new Date();
+            const path1 = 'path1';
+            const path2 = 'path/2/';
+
+            let listImports = {
+                listImports: function() {
+                    return Promise.resolve([]);
+                }
+            };
+            let importLister = {
+                ImportLister: function() {
+                    return listImports; 
+                    }
+                };
+
+            sinon.spy(importLister, 'ImportLister');
+
+            fs.file('main.css', { mtime: date });
+
+            let lessChanged = getLessChanged({ fs: fs, listImports: importLister });
+
+            let fakeFile1 = new File({ path: 'main.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+            let fakeFile2 = new File({ path: 'main2.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+
+            let lessChangedStream = lessChanged({ paths: [path1, path2] });
+
+            lessChangedStream.write(fakeFile1);
+            lessChangedStream.end();
+
+            lessChangedStream
+                .pipe(streamAssert.end(() => {
+                    let lessChangedStream2 = lessChanged();
+
+                    lessChangedStream2.write(fakeFile2);
+                    lessChangedStream2.end();
+
+                    lessChangedStream2
+                        .pipe(streamAssert.end(() => {
+                            expect(importLister.ImportLister).to.have.been.calledWith([path1, path2]);
+                            expect(importLister.ImportLister).to.have.been.calledWith(sinon.match.falsy);
+                            expect(importLister.ImportLister).to.have.been.called.twice;
+                            done();
+                        }));
+                }));
+        });
     });
 
     describe('when there is an error processing an import', () => {

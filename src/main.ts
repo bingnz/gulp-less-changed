@@ -36,11 +36,17 @@ module gulpLessChanged {
         changed: boolean
     }
 
+    let listerCache: { [item: string]: ImportLister } = {};
+
     export function run(options?: gulpLessChanged.PluginOptions) {
         options = options || {};
         let getOutputFileName = options.getOutputFileName || (input => gutil.replaceExtension(input, '.css'));
-        let importLister = new ImportLister(options.paths);
-
+        let pathsKey = options.paths ? options.paths.join('-') : '';
+        let importLister = listerCache[pathsKey];
+        if (!importLister) {
+            importLister = listerCache[pathsKey] = new ImportLister(options.paths);
+        }
+ 
         function transform(file: File, enc: string, callback: (error: any, data: any) => any) {
 
             if (file.isNull()) {

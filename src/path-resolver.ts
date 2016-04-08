@@ -33,7 +33,6 @@ module pathResolver {
                 fsAsync.statAsync(path)
                     .then((stat: fs.Stats) => Promise.resolve(path))
                     .catch((error: any) => {
-                        console.log(error);
                         return <string>null;
                     }))
                 .then(paths => {
