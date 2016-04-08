@@ -70,7 +70,11 @@ module gulpLessChanged {
                         return Promise.resolve(false);
                     }
 
-                    return checkImportsHaveChanged(file, intermediateResult.outputAge, importLister);
+                    return checkImportsHaveChanged(file, intermediateResult.outputAge, importLister)
+                        .catch(error => {
+                            console.error(error);
+                            return true;
+                        });
                 })
                 .then((importsHaveChanged: boolean) => {
                     if (importsHaveChanged) {

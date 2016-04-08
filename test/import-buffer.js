@@ -12,11 +12,11 @@ chai.use(sinonChai);
 
 const expect = chai.expect;
 
-var getImportBuffer = function(fs) {
+function getImportBuffer(fs) {
     let fsStub = fs || new FakeFs();
     let importBuffer = proxyquire('../release/import-buffer', { 'fs': fsStub });
     return importBuffer.ImportBuffer;
-};
+}
 
 class FakeImportLister {
     constructor(files) {

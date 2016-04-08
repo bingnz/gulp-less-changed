@@ -10,7 +10,7 @@ import { PathResolver } from './path-resolver';
 
 module importLister {
 
-    class dataUriPlugin {
+    class DataUriPlugin {
         private _imports: string[];
 
         constructor() {
@@ -69,7 +69,7 @@ module importLister {
                 return Promise.resolve([]);
             }
 
-            let dataUri = new dataUriPlugin();
+            let dataUri = new DataUriPlugin();
             let options: Less.Options2 = { filename: file.path, plugins: [dataUri] };
 
             if (this.paths) {
@@ -92,7 +92,7 @@ module importLister {
                         .catch(reason => {
                             let error = `Failed to process imports for '${file.path}': ${reason}`;
                             console.error(error);
-                            return Promise.reject(error);
+                            return Promise.reject(new Error(error));
                         });
                 });
         }

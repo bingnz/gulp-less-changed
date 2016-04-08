@@ -8,7 +8,7 @@ var proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 
 const expect = chai.expect;
 
-var getLessChanged = function(options) {
+function getLessChanged(options) {
     options = options || {};
     let fsStub = options.fs || new FakeFs();
     let listImportsStub = options.listImports || {
@@ -23,7 +23,7 @@ var getLessChanged = function(options) {
 
     let lessChanged = proxyquire('../release/main', { './import-lister': listImportsStub, 'fs': fsStub });
     return lessChanged;
-};
+}
 
 describe('gulp-less-changed', () => {
 
@@ -465,6 +465,46 @@ describe('gulp-less-changed', () => {
                     expect(importLister.ImportLister).to.have.been.calledWith([path1, path2])
                     done();
                 }));
+        });
+    });
+
+    describe('when there is an error processing an import', () => {
+        let lessChangedStream;
+        let fakeFile;
+        let lessChanged;
+
+        beforeEach(() => {
+            let date = new Date();
+
+            let fs = new FakeFs();
+
+            let importLister = {
+                ImportLister: function() {
+                    return {
+                        listImports: function() {
+                            return Promise.reject(new Error('Some error.'));
+                        }
+                    }; 
+                }
+            };
+
+            lessChanged = getLessChanged({ fs: fs, listImports: importLister });
+
+            fs.file('main.css', { mtime: date });
+
+            fakeFile = new File({ path: 'main.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+            lessChangedStream = lessChanged();
+        });
+
+        it('should pass the file onto the stream', done => {
+            lessChangedStream.write(fakeFile);
+            lessChangedStream.end();
+
+            lessChangedStream
+                .pipe(streamAssert.length(1))
+                .pipe(streamAssert.first(item => expect(item).to.equal(fakeFile)))
+                .pipe(streamAssert.end(done))
+                .once('assertion', done);
         });
     });
 });

@@ -16,7 +16,7 @@ const fsAsync = Promise.promisifyAll(fs);
 chai.use(sinonChai);
 const expect = chai.expect;
 
-var getImportLister = function(options) {
+function getImportLister(options) {
     options = options || {};
     let importBufferStub = options.importBuffer || {
         'ImportBuffer': function (lister) {
@@ -37,10 +37,10 @@ var getImportLister = function(options) {
     if (resolverStub) {
         proxies['./path-resolver'] = resolverStub;
     }
-    
+
     let listImports = proxyquire('../release/import-lister', proxies);
     return listImports.ImportLister;
-};
+}
 
 function readFile(file) {
     return fsAsync.readFileAsync(file.path)
@@ -99,7 +99,7 @@ describe('import-lister', () => {
         it('should throw an error', () => {
             return importLister.listImports(fakeFile)
                 .then(importList => expect.fail(0, 1, 'should have thrown an error.'))
-                .catch(error => expect(error).to.contain('Failed to process imports for '));
+                .catch(error => expect(error.message).to.contain('Failed to process imports for '));
         });
     });
 
@@ -163,8 +163,41 @@ describe('import-lister', () => {
                 .then(f => importLister.listImports(f))
                 .then(importList => {
                     expect(importList.map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
-                        resolvedPath.replace(/\//g, '!')]);
+                        resolvedPath.replace(new RegExp(path.sep, 'g'), '!')]);
                     expect(resolverFunction.resolve).to.have.been.calledWith('test/list-imports-cases/file-with-data-uri/image.svg'.replace(/\//g, path.sep));
+                });
+        });
+
+        it('should keep absolute path for import files', () => {
+            const relativePath = 'some/path/image.svg';
+            let absolutePath = path.join(process.cwd(), relativePath);
+            let resolverFunction = {
+                resolve: function() {
+                    return Promise.resolve(absolutePath);
+                }
+            };
+
+            let pathResolver = {
+                PathResolver: function()
+                {
+                    return resolverFunction;
+                } 
+            };
+            let importBufferStub = {
+                'ImportBuffer': function (lister) {
+                    return {
+                        'listImports': inputFile =>
+                            lister(inputFile).then(files =>
+                                Promise.map(files, file =>
+                                    Promise.resolve({ path: file, stat: { mtime: new Date() } })))}}};
+
+            sinon.spy(resolverFunction, 'resolve');
+
+            importLister = new (getImportLister({ pathResolver: pathResolver, importBuffer: importBufferStub }));
+
+            return importLister.listImports(new File({ path: 'x', contents: new Buffer(`@a: data-uri('${absolutePath}');`) }))
+                .then(importList => {
+                    expect(resolverFunction.resolve).to.have.been.calledWith(absolutePath.replace(/\//g, path.sep));
                 });
         });
 
@@ -196,7 +229,7 @@ describe('import-lister', () => {
                 .then(f => importLister.listImports(f))
                 .then(() => expect.fail(1, 0, 'Should have thrown an error.'))
                 .catch(error => {
-                    expect(error).to.contain('Error: Some error');
+                    expect(error.message).to.contain('Error: Some error');
                 });
         });
 
