@@ -1,10 +1,9 @@
 declare module Less {
 
     interface Options2 {
-        sourceMap?: SourceMapOption;
         filename?: string;
         plugins?: Plugin[];
-        rootFileInfo?: RootFileInfo;
+        paths?: string[];
     }
 
     interface FunctionRegistry {
@@ -13,6 +12,10 @@ declare module Less {
 
     interface Functions {
         functionRegistry: FunctionRegistry;
+    }
+
+    interface RelaxedLessStatic {
+        render(input: string, options: Options2): Promise<Less.RenderOutput>;
     }
 
     interface LessStaticExtensions extends LessStatic {

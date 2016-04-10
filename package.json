@@ -36,6 +36,7 @@
     "gulp-typescript": "^2.12.1",
     "merge2": "^1.0.2",
     "mocha": "^2.4.5",
+    "pmock": "^0.2.3",
     "proxyquire": "^1.7.4",
     "semantic-release": "^4.3.5",
     "sinon": "^1.17.3",
@@ -48,6 +49,7 @@
     "bluebird": "^3.3.4",
     "gulp-util": "^3.0.7",
     "less": "^2.6.0",
+    "object-assign": "^4.0.1",
     "stream-to-array": "^2.3.0",
     "through2": "^2.0.1",
     "vinyl": "^1.1.1"

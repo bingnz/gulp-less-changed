@@ -14,7 +14,7 @@ module listImports {
     }
 
     class ExpectedError extends Error {
-    };
+    }
 
     export class ImportBuffer {
         private importLister: (file: File) => Promise<string[]>;

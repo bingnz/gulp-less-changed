@@ -4,7 +4,7 @@ import * as Promise from 'bluebird';
 import * as through from 'through2';
 import * as fs from 'fs';
 import * as gutil from 'gulp-util';
-import * as ListImports from './list-imports';
+import { ImportLister } from './import-lister';
 import { FileInfo } from './import-buffer';
 import File = require('vinyl');
 
@@ -15,30 +15,38 @@ const MODULE_NAME = 'gulp-less-changed';
 module gulpLessChanged {
 
     export interface PluginOptions {
-        getOutputFileName?: (input: string) => string
+        paths?: string[];
+        getOutputFileName?: (input: string) => string;
     }
 
-    function checkImportsHaveChanged(file: File, mainFileDate: Date) {
+    function checkImportsHaveChanged(file: File, mainFileDate: Date, importLister: ImportLister) {
 
         function importHasChanged(importFile: FileInfo): boolean {
             return importFile.stat.mtime > mainFileDate;
         }
 
-        return ListImports.listImports(file)
+        return importLister.listImports(file)
             .then(imports => {
                 return imports.some(importHasChanged);
             })
     }
-    
+
     interface IntermediateResult {
         outputAge: Date,
         changed: boolean
     }
 
+    let listerCache: { [item: string]: ImportLister } = {};
+
     export function run(options?: gulpLessChanged.PluginOptions) {
         options = options || {};
         let getOutputFileName = options.getOutputFileName || (input => gutil.replaceExtension(input, '.css'));
-
+        let listerKey = JSON.stringify(options);
+        let importLister = listerCache[listerKey];
+        if (!importLister) {
+            importLister = listerCache[listerKey] = new ImportLister(options);
+        }
+ 
         function transform(file: File, enc: string, callback: (error: any, data: any) => any) {
 
             if (file.isNull()) {
@@ -68,7 +76,11 @@ module gulpLessChanged {
                         return Promise.resolve(false);
                     }
 
-                    return checkImportsHaveChanged(file, intermediateResult.outputAge).catch(reason => false);
+                    return checkImportsHaveChanged(file, intermediateResult.outputAge, importLister)
+                        .catch(error => {
+                            console.error(error);
+                            return true;
+                        });
                 })
                 .then((importsHaveChanged: boolean) => {
                     if (importsHaveChanged) {
@@ -81,7 +93,7 @@ module gulpLessChanged {
                     callback(null, null);
                 });
         }
-        
+
         return through.obj(transform);
     }
 }
