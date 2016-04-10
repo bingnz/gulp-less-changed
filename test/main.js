@@ -462,7 +462,7 @@ describe('gulp-less-changed', () => {
 
             lessChangedStream
                 .pipe(streamAssert.end(() => {
-                    expect(importLister.ImportLister).to.have.been.calledWith([path1, path2])
+                    expect(importLister.ImportLister).to.have.been.calledWith({ paths: [path1, path2] })
                     done();
                 }));
         });
@@ -513,7 +513,7 @@ describe('gulp-less-changed', () => {
                 }));
         });
 
-        it('should create new import import lister for different paths', done => {
+        it('should create new import lister for different paths', done => {
             let fs = new FakeFs();
             let date = new Date();
             const path1 = 'path1';
@@ -553,8 +553,56 @@ describe('gulp-less-changed', () => {
 
                     lessChangedStream2
                         .pipe(streamAssert.end(() => {
-                            expect(importLister.ImportLister).to.have.been.calledWith([path1, path2]);
-                            expect(importLister.ImportLister).to.have.been.calledWith(sinon.match.falsy);
+                            expect(importLister.ImportLister).to.have.been.calledWith({ paths: [path1, path2] });
+                            expect(importLister.ImportLister).to.have.been.calledWith({ });
+                            expect(importLister.ImportLister).to.have.been.called.twice;
+                            done();
+                        }));
+                }));
+        });
+
+        it('should create new import lister for different options', done => {
+            let fs = new FakeFs();
+            let date = new Date();
+            const path1 = 'path1';
+            const path2 = 'path/2/';
+
+            let listImports = {
+                listImports: function() {
+                    return Promise.resolve([]);
+                }
+            };
+            let importLister = {
+                ImportLister: function() {
+                    return listImports; 
+                    }
+                };
+
+            sinon.spy(importLister, 'ImportLister');
+
+            fs.file('main.css', { mtime: date });
+
+            let lessChanged = getLessChanged({ fs: fs, listImports: importLister });
+
+            let fakeFile1 = new File({ path: 'main.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+            let fakeFile2 = new File({ path: 'main2.less', stat: { mtime: date }, contents: new Buffer('@import \'import.less\';') });
+
+            let lessChangedStream = lessChanged({ paths: [path1, path2], something: 'first' });
+
+            lessChangedStream.write(fakeFile1);
+            lessChangedStream.end();
+
+            lessChangedStream
+                .pipe(streamAssert.end(() => {
+                    let lessChangedStream2 = lessChanged({ paths: [path1, path2], something: 'second' });
+
+                    lessChangedStream2.write(fakeFile2);
+                    lessChangedStream2.end();
+
+                    lessChangedStream2
+                        .pipe(streamAssert.end(() => {
+                            expect(importLister.ImportLister).to.have.been.calledWith({ paths: [path1, path2], something: 'first' });
+                            expect(importLister.ImportLister).to.have.been.calledWith({ paths: [path1, path2], something: 'second' });
                             expect(importLister.ImportLister).to.have.been.called.twice;
                             done();
                         }));

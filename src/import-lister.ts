@@ -7,6 +7,7 @@ import streamToArray = require('stream-to-array');
 import * as Promise from 'bluebird';
 import { ImportBuffer, FileInfo } from './import-buffer';
 import { PathResolver } from './path-resolver';
+const assign = require('object-assign');
 
 module importLister {
 
@@ -36,11 +37,17 @@ module importLister {
         }
     }
 
+    export interface Options {
+        paths?: string[];
+    }
+
     export class ImportLister {
         importBuffer: ImportBuffer;
         pathResolver: PathResolver;
+        lessOptions: Less.Options2;
 
-        constructor(private paths: string[]) {
+        constructor(lessOptions?: Options) {
+            this.lessOptions = lessOptions;
             this.importBuffer = new ImportBuffer(this.listImportsInternal.bind(this));
             this.pathResolver = new PathResolver();
         }
@@ -70,13 +77,9 @@ module importLister {
             }
 
             let dataUri = new DataUriPlugin();
-            let options: Less.Options2 = { filename: file.path, plugins: [dataUri] };
+            let options: Less.Options2 = assign({ filename: file.path }, this.lessOptions);
 
-            if (this.paths) {
-                let optionsPaths: string[] = [];
-                optionsPaths.push(...this.paths)
-                options.paths = optionsPaths;
-            }
+            options.plugins = options.plugins ? [dataUri, ...options.plugins] : [dataUri];
 
             return this.getLessData(file)
                 .then(lessData => {

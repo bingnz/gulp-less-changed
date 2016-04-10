@@ -41,10 +41,10 @@ module gulpLessChanged {
     export function run(options?: gulpLessChanged.PluginOptions) {
         options = options || {};
         let getOutputFileName = options.getOutputFileName || (input => gutil.replaceExtension(input, '.css'));
-        let pathsKey = options.paths ? options.paths.join('-') : '';
-        let importLister = listerCache[pathsKey];
+        let listerKey = JSON.stringify(options);
+        let importLister = listerCache[listerKey];
         if (!importLister) {
-            importLister = listerCache[pathsKey] = new ImportLister(options.paths);
+            importLister = listerCache[listerKey] = new ImportLister(options);
         }
  
         function transform(file: File, enc: string, callback: (error: any, data: any) => any) {

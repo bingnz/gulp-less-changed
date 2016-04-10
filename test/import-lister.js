@@ -259,7 +259,7 @@ describe('import-lister', () => {
                                     Promise.resolve({ path: file, stat: { mtime: new Date() } })))}}};
 
             sinon.spy(resolverFunction, 'resolve');
-            importLister = new (getImportLister({ pathResolver: pathResolver, importBuffer: importBufferStub }))([path1, path2]);
+            importLister = new (getImportLister({ pathResolver: pathResolver, importBuffer: importBufferStub }))({ paths: [path1, path2] });
 
             return readFile(new File({ path: filePath }))
                 .then(f => importLister.listImports(f))
@@ -314,7 +314,7 @@ describe('import-lister', () => {
             let lessStub = { render: () => Promise.resolve({ imports: [] }) };
             sinon.spy(lessStub, 'render');
 
-            importLister = new (getImportLister({ less: lessStub }))([path1, path2, path3]);
+            importLister = new (getImportLister({ less: lessStub }))({ paths: [path1, path2, path3] });
 
             return readFile(new File({ path: filePath }))
                 .then(f => importLister.listImports(f))
@@ -327,10 +327,9 @@ describe('import-lister', () => {
             const path3 = 'g/h/i';
 
             let lessStub = { render: () => Promise.resolve({ imports: [] }) };
-            sinon.spy(lessStub, 'render');
 
             let paths = [path1, path2, path3];
-            importLister = new (getImportLister({ less: lessStub }))(paths);
+            importLister = new (getImportLister({ less: lessStub }))({ paths: paths });
 
             let file = new File({ path: filePath, contents: new Buffer('fake') });
             return importLister.listImports(file)
@@ -356,12 +355,115 @@ describe('import-lister', () => {
         sinon.spy(importBufferStub, 'ImportBuffer');
 
         let paths = [path1, path2, path3];
-        importLister = new (getImportLister({ importBuffer: importBufferStub, less: lessStub }))(paths);
+        importLister = new (getImportLister({ importBuffer: importBufferStub, less: lessStub }))({ paths: paths });
  
         let fileA = new File({ path: 'filePathA', contents: new Buffer('fake') });
         let fileB = new File({ path: 'filePathB', contents: new Buffer('fake') });
         return importLister.listImports(fileA)
             .then(() => importLister.listImports(fileB))
             .then(() => expect(importBufferStub.ImportBuffer).to.have.been.calledOnce);
+    });
+
+    describe('when options are specified', () => {
+        it('should pass the original options to the less render function', () => {
+            let lessStub = { render: () => Promise.resolve({ imports: [] }) };
+            sinon.spy(lessStub, 'render');
+
+            importLister = new (getImportLister({ less: lessStub }))({ some: 'option' });
+
+            let fakeFile = new File({ path: 'something.less', contents: new Buffer('') });
+            return importLister.listImports(fakeFile)
+                .then(() => expect(lessStub.render).to.have.been.calledWith(sinon.match.string, sinon.match({ some: 'option' })));
+        });
+
+        it('should pass specified plugins to the less render function', () => {
+            let lessStub = { render: () => Promise.resolve({ imports: [] }) };
+            let renderSpy = sinon.spy(lessStub, 'render');
+
+            let myPlugin = { install: function() { } };
+            importLister = new (getImportLister({ less: lessStub }))({ some: 'option', plugins: [myPlugin] });
+
+            let fakeFile = new File({ path: 'something.less', contents: new Buffer('') });
+            return importLister.listImports(fakeFile)
+                .then(() => {
+                    let plugins = renderSpy.getCall(0).args[1].plugins;
+                    expect(plugins).to.include(myPlugin);
+                });
+        });
+
+        it('should still process data-uri correctly when passing specified plugins to the less render function', () => {
+            let resolverFunction = {
+                resolve: function(file) {
+                    return Promise.resolve(file);
+                }
+            };
+
+            let pathResolver = {
+                PathResolver: function()
+                {
+                    return resolverFunction;
+                } 
+            };
+            let importBufferStub = {
+                'ImportBuffer': function (lister) {
+                    return {
+                        'listImports': inputFile =>
+                            lister(inputFile).then(files =>
+                                Promise.map(files, file =>
+                                    Promise.resolve({ path: file, stat: { mtime: new Date() } })))}}};
+
+            let myPlugin = { install: function() { } };
+            importLister = new (getImportLister({ pathResolver: pathResolver, importBuffer: importBufferStub }))({ some: 'option', plugins: [myPlugin] });
+
+            let fakeFile = new File({ path: 'something.less', contents: new Buffer('@x: data-uri("file.png");') });
+            return importLister.listImports(fakeFile)
+                .then(imports => {
+                    expect(imports.map(i => i.path)).to.deep.equal(['file.png']);
+                });
+        });
+
+        it('should use options correctly in the less evaluator', () => {
+            const importPath = './test/list-imports-cases/@{myVar}/file.less';
+
+            let resolverFunction = {
+                resolve: function(file) {
+                    return Promise.resolve(file);
+                }
+            };
+
+            let pathResolver = {
+                PathResolver: function()
+                {
+                    return resolverFunction;
+                } 
+            };
+            let importBufferStub = {
+                'ImportBuffer': function (lister) {
+                    return {
+                        'listImports': inputFile =>
+                            lister(inputFile).then(files =>
+                                Promise.map(files, file =>
+                                    Promise.resolve({ path: file, stat: { mtime: new Date() } })))}}};
+
+            importLister = new (getImportLister({ pathResolver: pathResolver, importBuffer: importBufferStub }))({ globalVars: { myVar: 'file-with-import' } });
+
+            let fakeFile = new File({ path: 'something.less', contents: new Buffer(`@import '${importPath}';`) });
+            return importLister.listImports(fakeFile)
+                .then(importList => expect(importList.map(x => x.path.split(path.sep).join('!'))).to.include(
+                    '.!test!list-imports-cases!file-with-import!file.less'));
+        });
+
+        it('should not alter original options', () => {
+            let lessStub = { render: () => Promise.resolve({ imports: [] }) };
+            sinon.spy(lessStub, 'render');
+
+            let options = { a: 'b', c: 'd' };
+            importLister = new (getImportLister({ less: lessStub }))(options);
+
+            let fakeFile = new File({ path: 'something.less', contents: new Buffer('') });
+
+            return importLister.listImports(fakeFile)
+                .then(() => expect(options).to.deep.equal({ a: 'b', c: 'd' }));
+        });
     });
 });
