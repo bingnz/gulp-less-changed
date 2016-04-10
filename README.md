@@ -103,6 +103,8 @@ If no options are specified, looks for a CSS file in the same path as the LESS f
    Overrides the default behaviour of looking for .css files in the input path.
  * **options.paths** - `string[]` Search paths for `@import`s and files referenced using `data-uri`. This
    works in the same way as the `paths` option for [gulp-less](https://www.npmjs.com/package/gulp-less).
+   Additional less options such as `globalVars` can also be used: internally, less is used to discover imports. This means that
+   paths can be evaluated using less syntax.
 
 ## License
 
