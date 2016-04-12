@@ -113,6 +113,15 @@ describe('import-lister', () => {
         });
     });
 
+    describe('when passing in a file with a function call', () => {
+        const filePath = './test/list-imports-cases/file-with-function-call/file.less';
+        it('should return no imports', () => {
+            return readFile(new File({ path: filePath }))
+                .then(f => importLister.listImports(f))
+                .then(importList => expect(importList).to.be.empty);
+        });
+    });
+
     describe('when passing in a file with recursive imports', () => {
         const filePath = './test/list-imports-cases/file-with-recursive-imports/file.less';
         it('should return the imports', () => {
