@@ -172,7 +172,7 @@ describe('import-lister', () => {
                 .then(f => importLister.listImports(f))
                 .then(importList => {
                     expect(importList.map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
-                        resolvedPath.replace(new RegExp(path.sep, 'g'), '!')]);
+                        resolvedPath.split(path.sep).join('!')]);
                     expect(resolverFunction.resolve).to.have.been.calledWith('test/list-imports-cases/file-with-data-uri/image.svg'.replace(/\//g, path.sep));
                 });
         });
@@ -458,8 +458,8 @@ describe('import-lister', () => {
 
             let fakeFile = new File({ path: 'something.less', contents: new Buffer(`@import '${importPath}';`) });
             return importLister.listImports(fakeFile)
-                .then(importList => expect(importList.map(x => x.path.split(path.sep).join('!'))).to.include(
-                    '.!test!list-imports-cases!file-with-import!file.less'));
+                .then(importList => expect(importList.map(i => i.path)).to.include(
+                    './test/list-imports-cases/file-with-import/file.less'));
         });
 
         it('should not alter original options', () => {
