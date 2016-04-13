@@ -7,35 +7,11 @@ import streamToArray = require('stream-to-array');
 import * as Promise from 'bluebird';
 import { ImportBuffer, FileInfo } from './import-buffer';
 import { PathResolver } from './path-resolver';
+import { DataUriVisitorPlugin } from './data-uri-visitor-plugin';
+
 const assign = require('object-assign');
 
 module importLister {
-
-    class DataUriPlugin {
-        private _imports: string[];
-
-        constructor() {
-            this._imports = [];
-        }
-
-        public install(lessLocal: Less.LessStaticExtensions, pluginManager: any): void {
-            let self = this;
-            lessLocal.functions.functionRegistry.add('data-uri', function(mimeType: any, file: any) {
-                let importedFile = file;
-                if (!importedFile) {
-                    importedFile = mimeType;
-                }
-                let importPath = path.normalize(path.join(this.currentFileInfo.entryPath, importedFile.value));
-                if (self._imports.indexOf(importPath) < 0) {
-                    self._imports.push(importPath);
-                }
-            });
-        }
-
-        public get imports(): string[] {
-            return this._imports;
-        }
-    }
 
     export interface Options {
         paths?: string[];
@@ -76,10 +52,10 @@ module importLister {
                 return Promise.resolve([]);
             }
 
-            let dataUri = new DataUriPlugin();
+            let dataUriVisitorPlugin = new DataUriVisitorPlugin();
             let options: Less.Options2 = assign({ filename: file.path }, this.lessOptions);
 
-            options.plugins = options.plugins ? [dataUri, ...options.plugins] : [dataUri];
+            options.plugins = options.plugins ? [dataUriVisitorPlugin, ...options.plugins] : [dataUriVisitorPlugin];
 
             return this.getLessData(file)
                 .then(lessData => {
@@ -87,7 +63,7 @@ module importLister {
                         .render(lessData, options)
                         .then(value => {
                             return Promise.join(Promise.resolve(value.imports),
-                                (Promise.map(dataUri.imports, i => this.pathResolver.resolve(i, options.paths))));
+                                (Promise.map(dataUriVisitorPlugin.imports, i => this.pathResolver.resolve(i, options.paths))));
                         })
                         .then(([fileImports, dataUriImports]) => {
                             return Promise.resolve(fileImports.concat(dataUriImports));

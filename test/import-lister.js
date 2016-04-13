@@ -113,6 +113,15 @@ describe('import-lister', () => {
         });
     });
 
+    describe('when passing in a file with a function call', () => {
+        const filePath = './test/list-imports-cases/file-with-function-call/file.less';
+        it('should return no imports', () => {
+            return readFile(new File({ path: filePath }))
+                .then(f => importLister.listImports(f))
+                .then(importList => expect(importList).to.be.empty);
+        });
+    });
+
     describe('when passing in a file with recursive imports', () => {
         const filePath = './test/list-imports-cases/file-with-recursive-imports/file.less';
         it('should return the imports', () => {
@@ -163,7 +172,7 @@ describe('import-lister', () => {
                 .then(f => importLister.listImports(f))
                 .then(importList => {
                     expect(importList.map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
-                        resolvedPath.replace(new RegExp(path.sep, 'g'), '!')]);
+                        resolvedPath.split(path.sep).join('!')]);
                     expect(resolverFunction.resolve).to.have.been.calledWith('test/list-imports-cases/file-with-data-uri/image.svg'.replace(/\//g, path.sep));
                 });
         });
@@ -449,8 +458,8 @@ describe('import-lister', () => {
 
             let fakeFile = new File({ path: 'something.less', contents: new Buffer(`@import '${importPath}';`) });
             return importLister.listImports(fakeFile)
-                .then(importList => expect(importList.map(x => x.path.split(path.sep).join('!'))).to.include(
-                    '.!test!list-imports-cases!file-with-import!file.less'));
+                .then(importList => expect(importList.map(i => i.path)).to.include(
+                    './test/list-imports-cases/file-with-import/file.less'));
         });
 
         it('should not alter original options', () => {
@@ -464,6 +473,38 @@ describe('import-lister', () => {
 
             return importLister.listImports(fakeFile)
                 .then(() => expect(options).to.deep.equal({ a: 'b', c: 'd' }));
+        });
+    });
+
+    describe('when a data-uri call is invalid', () => {
+        it('should throw an error', () => {
+            let resolverFunction = {
+                resolve: function(file) {
+                    return Promise.resolve(file);
+                }
+            };
+
+            let pathResolver = {
+                PathResolver: function()
+                {
+                    return resolverFunction;
+                } 
+            };
+            let importBufferStub = {
+                'ImportBuffer': function (lister) {
+                    return {
+                        'listImports': inputFile =>
+                            lister(inputFile).then(files =>
+                                Promise.map(files, file =>
+                                    Promise.resolve({ path: file, stat: { mtime: new Date() } })))}}};
+
+            sinon.spy(resolverFunction, 'resolve');
+            importLister = new (getImportLister({ pathResolver: pathResolver, importBuffer: importBufferStub }));
+
+            return importLister.listImports(new File({ path: 'x', contents: new Buffer('@a: data-uri();') }))
+                .catch(error => {
+                    expect(error.message).to.contain('Failed to process imports');
+                });
         });
     });
 });
