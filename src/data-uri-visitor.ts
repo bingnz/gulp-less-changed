@@ -2,11 +2,16 @@ import * as less from 'less';
 import * as path from 'path';
 
 module dataUriVisitor {
+    export interface Import {
+        directory: string;
+        relativePath: string;
+    }
+
     export class DataUriVisitor {
         public isReplacing = false;
         public isPreEvalVisitor = true;
         private _visitor: Less.Visitor;
-        private _imports: string[] = [];
+        private _imports: Import[] = [];
 
         constructor(less: Less.LessStaticExtensions) {
             this._visitor = new less.visitors.Visitor(this);
@@ -35,15 +40,14 @@ module dataUriVisitor {
             }
 
             let importedFile = argument.value[0].value;
-            var importPath = path.normalize(path.join(ruleNode.currentFileInfo.entryPath, importedFile));
 
-            this._imports.push(importPath);
+            this._imports.push({ directory: ruleNode.currentFileInfo.entryPath, relativePath: importedFile });
 
             return ruleNode;
 
         }
 
-        public get imports(): string[] {
+        public get imports(): Import[] {
             return this._imports;
         }
     }

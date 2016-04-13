@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { DataUriVisitor } from './data-uri-visitor';
+import { DataUriVisitor, Import } from './data-uri-visitor';
 
 module dataUriVisitorPlugin {
     export class DataUriVisitorPlugin {
@@ -10,7 +10,7 @@ module dataUriVisitorPlugin {
             pluginManager.addVisitor(this._dataUriVisitor);
         }
 
-        public get imports(): string[] {
+        public get imports(): Import[] {
             return this._dataUriVisitor ? this._dataUriVisitor.imports : [];
         }
     }

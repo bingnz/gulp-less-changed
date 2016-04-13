@@ -63,7 +63,7 @@ module importLister {
                         .render(lessData, options)
                         .then(value => {
                             return Promise.join(Promise.resolve(value.imports),
-                                (Promise.map(dataUriVisitorPlugin.imports, i => this.pathResolver.resolve(i, options.paths))));
+                                (Promise.map(dataUriVisitorPlugin.imports, i => this.pathResolver.resolve(i.directory, i.relativePath, options.paths))));
                         })
                         .then(([fileImports, dataUriImports]) => {
                             return Promise.resolve(fileImports.concat(dataUriImports));

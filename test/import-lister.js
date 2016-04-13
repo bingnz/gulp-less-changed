@@ -173,7 +173,7 @@ describe('import-lister', () => {
                 .then(importList => {
                     expect(importList.map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
                         resolvedPath.split(path.sep).join('!')]);
-                    expect(resolverFunction.resolve).to.have.been.calledWith('test/list-imports-cases/file-with-data-uri/image.svg'.replace(/\//g, path.sep));
+                    expect(resolverFunction.resolve).to.have.been.calledWith('./test/list-imports-cases/file-with-data-uri/', 'image.svg');
                 });
         });
 
@@ -206,7 +206,7 @@ describe('import-lister', () => {
 
             return importLister.listImports(new File({ path: 'x', contents: new Buffer(`@a: data-uri('${absolutePath}');`) }))
                 .then(importList => {
-                    expect(resolverFunction.resolve).to.have.been.calledWith(absolutePath.replace(/\//g, path.sep));
+                    expect(resolverFunction.resolve).to.have.been.calledWith('', absolutePath.replace(/\//g, path.sep));
                 });
         });
 
@@ -273,7 +273,7 @@ describe('import-lister', () => {
             return readFile(new File({ path: filePath }))
                 .then(f => importLister.listImports(f))
                 .then(importList => {
-                    expect(resolverFunction.resolve).to.have.been.calledWith(sinon.match.string, [path1, path2]);
+                    expect(resolverFunction.resolve).to.have.been.calledWith(sinon.match.string, sinon.match.string, [path1, path2]);
                 });
         });
     });
@@ -402,7 +402,7 @@ describe('import-lister', () => {
 
         it('should still process data-uri correctly when passing specified plugins to the less render function', () => {
             let resolverFunction = {
-                resolve: function(file) {
+                resolve: function(path, file) {
                     return Promise.resolve(file);
                 }
             };
@@ -435,7 +435,7 @@ describe('import-lister', () => {
             const importPath = './test/list-imports-cases/@{myVar}/file.less';
 
             let resolverFunction = {
-                resolve: function(file) {
+                resolve: function(path, file) {
                     return Promise.resolve(file);
                 }
             };
@@ -479,7 +479,7 @@ describe('import-lister', () => {
     describe('when a data-uri call is invalid', () => {
         it('should throw an error', () => {
             let resolverFunction = {
-                resolve: function(file) {
+                resolve: function(path, file) {
                     return Promise.resolve(file);
                 }
             };

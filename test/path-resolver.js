@@ -45,15 +45,16 @@ describe('path-resolver', () => {
 
     describe('when paths are not specified', () => {
         it('should return path if file exists', () => {
-            const filePath = 'this/file/exists.txt';
-            fakeFs.file(filePath, { stat: { mtime: new Date() } });
-            return pathResolver.resolve(filePath)
-                .then(resolved => expect(resolved).to.equal(filePath));
+            const importPath = 'this';
+            const filePath = 'file/exists.txt';
+            fakeFs.file(path.join(importPath, filePath), { stat: { mtime: new Date() } });
+            return pathResolver.resolve(importPath, filePath)
+                .then(resolved => expect(resolved).to.equal(path.join(importPath, filePath)));
         });
 
         it('should throw error if file doesn\'t exist', () => {
             const filePath = 'this/file/doesnot/exist.txt'.replace(new RegExp('/', 'g'), path.sep);
-            return pathResolver.resolve(filePath)
+            return pathResolver.resolve('./', filePath)
                 .then(resolved => expect.fail(1, 0, 'Should have thrown an error.'))
                 .catch(PathResolverError, error => {
                     expect(error.message).to.contain(`Import file '${filePath}' wasn't found.`);
@@ -66,9 +67,9 @@ describe('path-resolver', () => {
             const fileName = 'file.txt';
             const filePath = path.join('this/file', fileName);
 
-            fakeFs.file(path.join(currentDirectory, fileName), { stat: { mtime: new Date() } });
-            return pathResolver.resolve(filePath)
-                .then(resolved => expect(resolved).to.equal(path.normalize(path.join(currentDirectory, fileName))));
+            fakeFs.file(path.join(currentDirectory, filePath), { stat: { mtime: new Date() } });
+            return pathResolver.resolve('./', filePath)
+                .then(resolved => expect(resolved).to.equal(path.normalize(path.join(currentDirectory, filePath))));
         });
     });
 
@@ -80,20 +81,22 @@ describe('path-resolver', () => {
             const yetAnotherPath = 'yetAnotherPath';
 
             fakeFs.file(path.join(thisPath, fileName), { stat: { mtime: new Date() } });
-            return pathResolver.resolve(fileName, [anotherPath, thisPath, yetAnotherPath])
+            return pathResolver.resolve('./', fileName, [anotherPath, thisPath, yetAnotherPath])
                 .then(resolved => expect(resolved).to.equal(path.join(thisPath, fileName)));
         });
 
         it('should throw error if file doesn\'t exist in any of the paths', () => {
-            const fileName = 'missing.txt';
+            const fileName = 'it/is/missing.txt';
             const anotherPath = 'another/Path';
             const yetAnotherPath = 'yetAnotherPath';
+            const currentDirectory = 'some/path';
 
-            return pathResolver.resolve(fileName, [anotherPath, yetAnotherPath])
+            return pathResolver.resolve(currentDirectory, fileName, [anotherPath, yetAnotherPath])
                 .then(resolved => expect.fail(1, 0, 'Should have thrown an error.'))
                 .catch(PathResolverError, error => {
                     expect(error.message).to.contain(`Import file '${fileName}' wasn't found.`);
                     expect(error.message).to.contain(`'${fileName}'`);
+                    expect(error.message).to.contain(`'${path.join(currentDirectory, fileName)}'`);
                     expect(error.message).to.contain(`'${path.join(anotherPath, fileName)}'`);
                     expect(error.message).to.contain(`'${path.join(yetAnotherPath, fileName)}'`);
                 })
@@ -104,9 +107,9 @@ describe('path-resolver', () => {
             const fileName = 'file.txt';
             const filePath = path.join('this/file', fileName);
 
-            fakeFs.file(path.join(currentDirectory, fileName), { stat: { mtime: new Date() } });
-            return pathResolver.resolve(filePath, ['bad1', 'bad2'])
-                .then(resolved => expect(resolved).to.equal(path.join(currentDirectory, fileName)));
+            fakeFs.file(path.join(currentDirectory, filePath), { stat: { mtime: new Date() } });
+            return pathResolver.resolve('./', filePath, ['bad1', 'bad2'])
+                .then(resolved => expect(resolved).to.equal(path.join(currentDirectory, filePath)));
         });
     });
 });

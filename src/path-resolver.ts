@@ -18,16 +18,14 @@ module pathResolver {
     }
 
     export class PathResolver {
-        public resolve(inputPath: string, searchPaths: string[]): Promise<string> {
-            let fileName = path.basename(inputPath);
- 
-            let pathsToTry = [inputPath];
+        public resolve(currentDirectory: string, inputPath: string, searchPaths: string[]): Promise<string> {
+            let pathsToTry = [path.join(currentDirectory, inputPath)];
 
             if (searchPaths) {
-                pathsToTry.push(...searchPaths.map(p => path.join(p, fileName)));
+                pathsToTry.push(...searchPaths.map(p => path.join(p, inputPath)));
             }
 
-            pathsToTry.push(path.join(process.cwd(), fileName));
+            pathsToTry.push(path.join(process.cwd(), inputPath));
 
             return Promise.map(pathsToTry, path =>
                 fsAsync.statAsync(path)
