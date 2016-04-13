@@ -475,4 +475,36 @@ describe('import-lister', () => {
                 .then(() => expect(options).to.deep.equal({ a: 'b', c: 'd' }));
         });
     });
+
+    describe('when a data-uri call is invalid', () => {
+        it('should throw an error', () => {
+            let resolverFunction = {
+                resolve: function(file) {
+                    return Promise.resolve(file);
+                }
+            };
+
+            let pathResolver = {
+                PathResolver: function()
+                {
+                    return resolverFunction;
+                } 
+            };
+            let importBufferStub = {
+                'ImportBuffer': function (lister) {
+                    return {
+                        'listImports': inputFile =>
+                            lister(inputFile).then(files =>
+                                Promise.map(files, file =>
+                                    Promise.resolve({ path: file, stat: { mtime: new Date() } })))}}};
+
+            sinon.spy(resolverFunction, 'resolve');
+            importLister = new (getImportLister({ pathResolver: pathResolver, importBuffer: importBufferStub }));
+
+            return importLister.listImports(new File({ path: 'x', contents: new Buffer('@a: data-uri();') }))
+                .catch(error => {
+                    expect(error.message).to.contain('Failed to process imports');
+                });
+        });
+    });
 });

@@ -22,13 +22,19 @@ module dataUriVisitor {
                 return ruleNode;
             }
 
-            let importedFile: string;
-            if (ruleNode.args.length === 2) { // specifying MIME type.
-                importedFile = (<any>ruleNode.args[1]).value[0].value;
-            } else {
-                importedFile = (<any>ruleNode.args[0]).value[0].value;
+            if (ruleNode.args.length === 0) {
+                return ruleNode;
             }
 
+            let argument: any;
+
+            if (ruleNode.args.length === 2) { // specifying MIME type.
+                argument = ruleNode.args[1];
+            } else {
+                argument = ruleNode.args[0];
+            }
+
+            let importedFile = argument.value[0].value;
             var importPath = path.normalize(path.join(ruleNode.currentFileInfo.entryPath, importedFile));
 
             this._imports.push(importPath);
