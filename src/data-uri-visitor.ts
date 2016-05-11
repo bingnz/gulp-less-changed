@@ -39,7 +39,7 @@ module dataUriVisitor {
                 argument = ruleNode.args[0];
             }
 
-            let importedFile = argument.value[0].value;
+            let importedFile = argument.value;
 
             this._imports.push({ directory: ruleNode.currentFileInfo.entryPath, relativePath: importedFile });
 
