@@ -12,16 +12,25 @@ function getLessChanged(options) {
     options = options || {};
     let fsStub = options.fs || new FakeFs();
     let listImportsStub = options.listImports || {
-        ImportLister: function() {
+        ImportLister: function () {
             return {
-                listImports: function() {
+                listImports: function () {
                     return Promise.resolve([]);
                 }
             }
         }
     };
+    let importBufferStub = options.importBuffer || {
+        ImportBuffer: function (lister, key) {
+            return {
+                listImports: function (file) {
+                    return lister(file);
+                }
+            }
+        }
+    };
 
-    let lessChanged = proxyquire('../release/main', { './import-lister': listImportsStub, 'fs': fsStub });
+    let lessChanged = proxyquire('../release/main', { './import-lister': listImportsStub, './import-buffer': importBufferStub, 'fs': fsStub });
     return lessChanged;
 }
 
@@ -194,10 +203,10 @@ describe('gulp-less-changed', () => {
             let fs = new FakeFs();
 
             let importLister = {
-                ImportLister: function() {
+                ImportLister: function () {
                     return {
-                        listImports: function() {
-                            return new Promise((resolve, reject) => resolve([{ path: 'import.less', stat: { mtime: date } }]));
+                        listImports: function () {
+                            return new Promise((resolve, reject) => resolve([{ path: 'import.less', time: date.getTime() }]));
                         }
                     }
                 }
@@ -235,10 +244,10 @@ describe('gulp-less-changed', () => {
             let fs = new FakeFs();
 
             let importLister = {
-                ImportLister: function() {
+                ImportLister: function () {
                     return {
-                        listImports: function() {
-                            return new Promise((resolve, reject) => resolve([{ path: 'import.less', stat: { mtime: newerDate } }]));
+                        listImports: function () {
+                            return new Promise((resolve, reject) => resolve([{ path: 'import.less', time: newerDate.getTime() }]));
                         }
                     }
                 }
@@ -279,10 +288,10 @@ describe('gulp-less-changed', () => {
             let fs = new FakeFs();
 
             let importLister = {
-                ImportLister: function() {
+                ImportLister: function () {
                     return {
-                        listImports: function() {
-                            return new Promise((resolve, reject) => resolve([{ path: 'import.less', stat: { mtime: middleDate } }]));
+                        listImports: function () {
+                            return new Promise((resolve, reject) => resolve([{ path: 'import.less', time: middleDate.getTime() }]));
                         }
                     }
                 }
@@ -365,14 +374,15 @@ describe('gulp-less-changed', () => {
             let date = new Date();
 
             let listImports = {
-                listImports: function() {
+                listImports: function () {
                     return Promise.resolve([]);
-                }};
+                }
+            };
             let importLister = {
-                ImportLister: function() {
-                    return listImports; 
-                    }
-                };
+                ImportLister: function () {
+                    return listImports;
+                }
+            };
 
             sinon.spy(listImports, 'listImports');
 
@@ -402,15 +412,15 @@ describe('gulp-less-changed', () => {
             const path2 = 'path/2/';
 
             let listImports = {
-                listImports: function() {
+                listImports: function () {
                     return Promise.resolve([]);
                 }
             };
             let importLister = {
-                ImportLister: function() {
-                    return listImports; 
-                    }
-                };
+                ImportLister: function () {
+                    return listImports;
+                }
+            };
 
             sinon.spy(listImports, 'listImports');
 
@@ -438,15 +448,15 @@ describe('gulp-less-changed', () => {
             const path2 = 'path/2/';
 
             let listImports = {
-                listImports: function() {
+                listImports: function () {
                     return Promise.resolve([]);
                 }
             };
             let importLister = {
-                ImportLister: function() {
-                    return listImports; 
-                    }
-                };
+                ImportLister: function () {
+                    return listImports;
+                }
+            };
 
             sinon.spy(importLister, 'ImportLister');
 
@@ -474,15 +484,15 @@ describe('gulp-less-changed', () => {
             const path2 = 'path/2/';
 
             let listImports = {
-                listImports: function() {
+                listImports: function () {
                     return Promise.resolve([]);
                 }
             };
             let importLister = {
-                ImportLister: function() {
-                    return listImports; 
-                    }
-                };
+                ImportLister: function () {
+                    return listImports;
+                }
+            };
 
             sinon.spy(importLister, 'ImportLister');
 
@@ -520,15 +530,15 @@ describe('gulp-less-changed', () => {
             const path2 = 'path/2/';
 
             let listImports = {
-                listImports: function() {
+                listImports: function () {
                     return Promise.resolve([]);
                 }
             };
             let importLister = {
-                ImportLister: function() {
-                    return listImports; 
-                    }
-                };
+                ImportLister: function () {
+                    return listImports;
+                }
+            };
 
             sinon.spy(importLister, 'ImportLister');
 
@@ -554,7 +564,7 @@ describe('gulp-less-changed', () => {
                     lessChangedStream2
                         .pipe(streamAssert.end(() => {
                             expect(importLister.ImportLister).to.have.been.calledWith({ paths: [path1, path2] });
-                            expect(importLister.ImportLister).to.have.been.calledWith({ });
+                            expect(importLister.ImportLister).to.have.been.calledWith({});
                             expect(importLister.ImportLister).to.have.been.called.twice;
                             done();
                         }));
@@ -568,15 +578,15 @@ describe('gulp-less-changed', () => {
             const path2 = 'path/2/';
 
             let listImports = {
-                listImports: function() {
+                listImports: function () {
                     return Promise.resolve([]);
                 }
             };
             let importLister = {
-                ImportLister: function() {
-                    return listImports; 
-                    }
-                };
+                ImportLister: function () {
+                    return listImports;
+                }
+            };
 
             sinon.spy(importLister, 'ImportLister');
 
@@ -621,12 +631,12 @@ describe('gulp-less-changed', () => {
             let fs = new FakeFs();
 
             let importLister = {
-                ImportLister: function() {
+                ImportLister: function () {
                     return {
-                        listImports: function() {
+                        listImports: function () {
                             return Promise.reject(new Error('Some error.'));
                         }
-                    }; 
+                    };
                 }
             };
 

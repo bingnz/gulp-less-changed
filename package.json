@@ -47,8 +47,10 @@
   },
   "dependencies": {
     "bluebird": "^3.3.4",
+    "crypto": "0.0.3",
     "gulp-util": "^3.0.7",
     "less": "^2.6.0",
+    "mkdirp": "^0.5.1",
     "object-assign": "^4.0.1",
     "stream-to-array": "^2.3.0",
     "through2": "^2.0.1",

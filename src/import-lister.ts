@@ -1,13 +1,16 @@
 'use strict';
 
 import File = require('vinyl');
+import * as fs from 'fs';
 import * as less from 'less';
 import * as path from 'path';
 import streamToArray = require('stream-to-array');
 import * as Promise from 'bluebird';
-import { ImportBuffer, FileInfo } from './import-buffer';
+import { FileInfo } from './import-buffer';
 import { PathResolver } from './path-resolver';
 import { DataUriVisitorPlugin } from './data-uri-visitor-plugin';
+
+const fsAsync = Promise.promisifyAll(fs);
 
 const assign = require('object-assign');
 
@@ -18,13 +21,11 @@ module importLister {
     }
 
     export class ImportLister {
-        importBuffer: ImportBuffer;
         pathResolver: PathResolver;
         lessOptions: Less.Options2;
 
         constructor(lessOptions?: Options) {
             this.lessOptions = lessOptions;
-            this.importBuffer = new ImportBuffer(this.listImportsInternal.bind(this));
             this.pathResolver = new PathResolver();
         }
 
@@ -81,7 +82,25 @@ module importLister {
                 return Promise.resolve([]);
             }
 
-            return this.importBuffer.listImports(file);
+            return this.listImportsInternal(file)
+                .then((files: string[]) => {
+                    return Promise.map(files, file =>
+                        fsAsync.statAsync(file)
+                            .catch(Error, (error: NodeJS.ErrnoException) => {
+                                if (error.code === 'ENOENT') {
+                                    console.error(`Import '${file}' not found.`);
+                                    return Promise.resolve(null);
+                                }
+                                return Promise.reject(error);
+                            })
+                            .then((stat: fs.Stats) => { return { path: file, stat: stat } }))
+
+                })
+                .then((results: any[]): Promise<FileInfo[]> => {
+                    let successfulResults = results.filter(info => !!info.stat);
+                    successfulResults = successfulResults.map(i => { return { path: i.path, time: i.stat.mtime.getTime() } });
+                    return Promise.resolve(successfulResults);
+                });
         }
     }
 }

@@ -5,8 +5,9 @@ import * as through from 'through2';
 import * as fs from 'fs';
 import * as gutil from 'gulp-util';
 import { ImportLister } from './import-lister';
-import { FileInfo } from './import-buffer';
+import { ImportBuffer, FileInfo } from './import-buffer';
 import File = require('vinyl');
+import * as crypto from 'crypto';
 
 const fsAsync = Promise.promisifyAll(fs);
 
@@ -19,13 +20,13 @@ module gulpLessChanged {
         getOutputFileName?: (input: string) => string;
     }
 
-    function checkImportsHaveChanged(file: File, mainFileDate: Date, importLister: ImportLister) {
+    function checkImportsHaveChanged(file: File, mainFileDate: Date, importBuffer: ImportBuffer) {
 
         function importHasChanged(importFile: FileInfo): boolean {
-            return importFile.stat.mtime > mainFileDate;
+            return importFile.time > mainFileDate.getTime();
         }
 
-        return importLister.listImports(file)
+        return importBuffer.listImports(file)
             .then(imports => {
                 return imports.some(importHasChanged);
             })
@@ -36,16 +37,15 @@ module gulpLessChanged {
         changed: boolean
     }
 
-    let listerCache: { [item: string]: ImportLister } = {};
-
     export function run(options?: gulpLessChanged.PluginOptions) {
         options = options || {};
         let getOutputFileName = options.getOutputFileName || (input => gutil.replaceExtension(input, '.css'));
-        let listerKey = JSON.stringify(options);
-        let importLister = listerCache[listerKey];
-        if (!importLister) {
-            importLister = listerCache[listerKey] = new ImportLister(options);
-        }
+
+        let importLister = new ImportLister(options);
+
+        let instanceKey =  crypto.createHash('md5').update(__dirname + JSON.stringify(options)).digest('hex');
+        let bufferKey = `${MODULE_NAME}-${instanceKey}`;
+        let importBuffer = new ImportBuffer(importLister.listImports.bind(importLister), bufferKey);
  
         function transform(file: File, enc: string, callback: (error: any, data: any) => any) {
 
@@ -76,7 +76,7 @@ module gulpLessChanged {
                         return Promise.resolve(false);
                     }
 
-                    return checkImportsHaveChanged(file, intermediateResult.outputAge, importLister)
+                    return checkImportsHaveChanged(file, intermediateResult.outputAge, importBuffer)
                         .catch(error => {
                             console.error(error);
                             return true;
