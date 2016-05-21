@@ -9,7 +9,7 @@ notifications:
   email: false
 
 node_js:
-  - '6.1'
+  - 'stable'
 
 before_script:
   - npm prune
