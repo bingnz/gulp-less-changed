@@ -1,14 +1,12 @@
 {
-    "dependencies": {},
-    "devDependencies": {},
-    "ambientDependencies": {
-        "bluebird": "registry:dt/bluebird#2.0.0+20160319051630",
-        "chalk": "registry:dt/chalk#0.4.0+20160317120654",
-        "gulp-util": "registry:dt/gulp-util#0.0.0+20160316155526",
-        "less": "registry:dt/less#0.0.0+20160317120654",
-        "mkdirp": "registry:dt/mkdirp#0.3.0+20160317120654",
-        "node": "registry:dt/node#6.0.0+20160514165920",
-        "through2": "registry:dt/through2#2.0.0+20160317120654",
-        "vinyl": "registry:dt/vinyl#1.1.0+20160316155526"
-    }
+  "globalDependencies": {
+    "bluebird": "registry:dt/bluebird#2.0.0+20160319051630",
+    "chalk": "registry:dt/chalk#0.4.0+20160317120654",
+    "gulp-util": "registry:dt/gulp-util#0.0.0+20160316155526",
+    "less": "registry:dt/less#0.0.0+20160317120654",
+    "mkdirp": "registry:dt/mkdirp#0.3.0+20160317120654",
+    "node": "registry:dt/node#6.0.0+20160514165920",
+    "through2": "registry:dt/through2#2.0.0+20160317120654",
+    "vinyl": "registry:dt/vinyl#1.1.0+20160316155526"
+  }
 }
