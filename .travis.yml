@@ -9,10 +9,9 @@ notifications:
   email: false
 
 node_js:
-  - 'stable'
+  - '6.1'
 
 before_script:
-  - npm install -g npm@'>=3.9.3'
   - npm prune
   - npm install -g typings
   - typings install
