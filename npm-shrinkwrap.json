@@ -170,9 +170,9 @@
       }
     },
     "bluebird": {
-      "version": "3.3.5",
-      "from": "bluebird@>=3.3.4 <4.0.0",
-      "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.3.5.tgz"
+      "version": "3.4.0",
+      "from": "bluebird@3.4.0",
+      "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.4.0.tgz"
     },
     "boom": {
       "version": "2.10.1",
@@ -188,6 +188,11 @@
       "version": "1.8.4",
       "from": "braces@>=1.8.2 <2.0.0",
       "resolved": "https://registry.npmjs.org/braces/-/braces-1.8.4.tgz"
+    },
+    "buffer-shims": {
+      "version": "1.0.0",
+      "from": "buffer-shims@>=1.0.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/buffer-shims/-/buffer-shims-1.0.0.tgz"
     },
     "builtin-modules": {
       "version": "1.1.1",

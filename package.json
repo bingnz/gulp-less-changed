@@ -4,7 +4,7 @@
   "description": "Only pass .less files through the gulp stream if they or their dependencies have changed",
   "main": "release/main.js",
   "scripts": {
-    "test": "gulp run-tests",
+    "test": "node_modules/.bin/gulp run-tests",
     "send-coverage": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
@@ -46,7 +46,7 @@
     "typescript": "^1.7.5"
   },
   "dependencies": {
-    "bluebird": "^3.3.4",
+    "bluebird": "^3.4.0",
     "crypto": "0.0.3",
     "gulp-util": "^3.0.7",
     "less": "^2.6.0",
