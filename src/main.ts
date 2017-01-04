@@ -9,7 +9,7 @@ import { ImportBuffer, FileInfo } from './import-buffer';
 import File = require('vinyl');
 import * as crypto from 'crypto';
 
-const fsAsync = Promise.promisifyAll(fs);
+const fsAsync: any = Promise.promisifyAll(fs);
 
 const MODULE_NAME = 'gulp-less-changed';
 
@@ -73,7 +73,7 @@ module gulpLessChanged {
                 })
                 .then((intermediateResult: IntermediateResult) => {
                     if (intermediateResult.changed) {
-                        return Promise.resolve(false);
+                        return false;
                     }
 
                     return checkImportsHaveChanged(file, intermediateResult.outputAge, importBuffer)

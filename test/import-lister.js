@@ -49,7 +49,9 @@ function readFile(file) {
 }
 
 function toBytes(data, enc, callback) {
-    this.emit('data', new Uint8Array(data));
+    for (let byte of data.values()) {
+        this.emit('data', String.fromCharCode(byte));
+    }
     callback(null, null);
 }
 
@@ -167,7 +169,7 @@ describe('import-lister', () => {
                 .then(importList => {
                     expect(importList.map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
                         resolvedPath.split(path.sep).join('!')]);
-                    expect(resolverFunction.resolve).to.have.been.calledWith('./test/list-imports-cases/file-with-data-uri/', 'image.svg');
+                    expect(resolverFunction.resolve).to.have.been.calledWith(path.normalize('./test/list-imports-cases/file-with-data-uri/'), 'image.svg');
                 });
         });
 

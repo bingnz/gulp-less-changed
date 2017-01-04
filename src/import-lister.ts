@@ -10,7 +10,7 @@ import { FileInfo } from './import-buffer';
 import { PathResolver } from './path-resolver';
 import { DataUriVisitorPlugin } from './data-uri-visitor-plugin';
 
-const fsAsync = Promise.promisifyAll(fs);
+const fsAsync: any = Promise.promisifyAll(fs);
 
 const assign = require('object-assign');
 
@@ -36,12 +36,12 @@ module importLister {
                 });
             }
 
-            return streamToArray(<NodeJS.ReadableStream>file.contents)
-                .then(parts => {
+            return <Promise<string>>streamToArray(<NodeJS.ReadableStream>file.contents)
+                .then((parts: any) => {
                     let buffers: Buffer[] = [];
                     for (let i = 0; i < parts.length; ++i) {
-                        let part = parts[i]
-                        buffers.push((part instanceof Buffer) ? part : new Buffer(part))
+                        let part = parts[i];
+                        buffers.push(Buffer.from(part));
                     }
                     return Buffer.concat(buffers).toString();
                 });
@@ -62,14 +62,14 @@ module importLister {
                 .then(lessData => {
                     return (<Less.RelaxedLessStatic>less)
                         .render(lessData, options)
-                        .then(value => {
+                        .then((value: any) => {
                             return Promise.join(Promise.resolve(value.imports),
                                 (Promise.map(dataUriVisitorPlugin.imports, i => this.pathResolver.resolve(i.directory, i.relativePath, options.paths))));
                         })
-                        .then(([fileImports, dataUriImports]) => {
+                        .then(([fileImports, dataUriImports]: any[]) => {
                             return Promise.resolve(fileImports.concat(dataUriImports));
                         })
-                        .catch(reason => {
+                        .catch((reason: any) => {
                             let error = `Failed to process imports for '${file.path}': ${reason}`;
                             console.error(error);
                             return Promise.reject(new Error(error));

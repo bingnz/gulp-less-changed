@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as Promise from 'bluebird';
 
-const fsAsync = Promise.promisifyAll(fs);
+const fsAsync: any = Promise.promisifyAll(fs);
 
 module pathResolver {
     export class PathResolverError extends Error {
@@ -13,6 +13,8 @@ module pathResolver {
             super(message);
             this.message = message;
             this.name = (<any>this).constructor.name;
+            // Set the prototype explicitly.
+            Object.setPrototypeOf(this, PathResolverError.prototype);
             (<any>Error).captureStackTrace(this, this.name);
         }
     }
@@ -29,7 +31,7 @@ module pathResolver {
 
             return Promise.map(pathsToTry, path =>
                 fsAsync.statAsync(path)
-                    .then((stat: fs.Stats) => Promise.resolve(path))
+                    .then((stat: fs.Stats) => path)
                     .catch((error: any) => {
                         return <string>null;
                     }))
@@ -47,7 +49,7 @@ module pathResolver {
                 .then(result => {
                     if (result === null) {
                         let triedPathsDisplay = pathsToTry.map(p => `'${p}'`).join(', ');
-                        return Promise.reject(new PathResolverError(`Import file '${inputPath}' wasn't found. Tried: ${triedPathsDisplay}.`));
+                        throw new PathResolverError(`Import file '${inputPath}' wasn't found. Tried: ${triedPathsDisplay}.`);
                     }
                     return result;
                 });

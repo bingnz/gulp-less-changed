@@ -3,6 +3,5 @@
 coverage
 src
 test
-typings
 .vscode
 .travis.yml

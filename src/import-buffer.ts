@@ -8,8 +8,8 @@ import * as os from 'os';
 import * as crypto from 'crypto';
 import * as mkdirp from 'mkdirp';
 
-const fsAsync = Promise.promisifyAll(fs);
-const mkdirpAsync = Promise.promisify(mkdirp);
+const fsAsync: any = Promise.promisifyAll(fs);
+const mkdirpAsync: any = Promise.promisify(mkdirp);
 
 module listImports {
 
@@ -19,6 +19,12 @@ module listImports {
     }
 
     class ExpectedError extends Error {
+         constructor(message: string) {
+            super(message);
+
+            // Set the prototype explicitly.
+            Object.setPrototypeOf(this, ExpectedError.prototype);
+        }
     }
 
     let perBufferImportCache: { [bufferKey: string]: { [path: string]: FileInfo[] } } = {};
@@ -44,16 +50,17 @@ module listImports {
 
         private modifiedTimeIsTheSame(info: FileInfo): Promise<any> {
             return fsAsync.statAsync(info.path)
-                .then((stat: fs.Stats): Promise<any> => {
+                .then((stat: fs.Stats): boolean => {
                     let same = stat.mtime.getTime() === info.time;
                     if (!same) {
-                        return Promise.reject(new ExpectedError('changed'));
+                        throw new ExpectedError('changed');
                     }
-                    return Promise.resolve(same);
+                    return true;
                 })
-                .catch(() => {
+                .catch(ExpectedError, (err: ExpectedError) => { throw err; })
+                .catch((err: any) => {
                     // if this is an ongoing error it will be reported next time around.
-                    return Promise.reject(new ExpectedError('changed'));
+                    throw new ExpectedError('changed');
                 });
         }
 
@@ -90,7 +97,7 @@ module listImports {
 
             return mkdirpAsync(outputPath)
                 .then(() => fsAsync.writeFileAsync(cacheFile, JSON.stringify(imports)))
-                .catch(error => {
+                .catch((error: any) => {
                     console.error(`Failed to cache results to '${cacheFile}'. ${error}`);
                     return imports;
                 })
@@ -113,7 +120,7 @@ module listImports {
                     if (existingImports) {
                         return Promise.all(existingImports.map(this.modifiedTimeIsTheSame))
                             .then((results) => {
-                                return Promise.resolve(existingImports);
+                                return existingImports;
                             })
                             .catch(ExpectedError, () => {
                                 return useImportLister();
