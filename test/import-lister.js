@@ -359,6 +359,44 @@ describe('import-lister', () => {
         });
     });
 
+    describe('when passing in a file with a data-uri with an interpolated variable', () => {
+        const filePath = './test/list-imports-cases/file-with-data-uri-interpolated-variable/file.less';
+        it('should return no imports', () => {
+            return readFile(new File({ path: filePath }))
+                .then(f => importLister.listImports(f))
+                .then(importList => expect(importList).to.be.empty);
+        });
+
+        it('should not use the path resolver', () => {
+            const resolvedPath = 'some/path/image.svg';
+            let resolverFunction = {
+                resolve: function() {
+                    return Promise.resolve(resolvedPath);
+                }
+            };
+
+            let pathResolver = {
+                PathResolver: function()
+                {
+                    return resolverFunction;
+                } 
+            };
+
+            let fsStub = new FakeFs();
+            fsStub.file(resolvedPath, { mtime: new Date() });
+
+            sinon.spy(resolverFunction, 'resolve');
+            importLister = new (getImportLister({ pathResolver: pathResolver, fs: fsStub }));
+
+            return readFile(new File({ path: filePath }))
+                .then(f => importLister.listImports(f))
+                .then(importList => {
+                    expect(importList).to.be.empty;
+                    expect(resolverFunction.resolve).not.to.have.been.called;
+                });
+        });
+    });
+
     describe('when passing in a file as a buffered stream', () => {
         const filePath = './test/list-imports-cases/file-with-recursive-imports/file.less';
         it('should return the imports', () => {

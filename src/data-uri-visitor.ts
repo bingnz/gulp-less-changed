@@ -39,7 +39,7 @@ module dataUriVisitor {
                 argument = ruleNode.args[0];
             }
 
-            if (!argument.value) {
+            if (!argument.value || /@/.test(argument.value)) {
                 return ruleNode;
             }
 
