@@ -1,5 +1,4 @@
 declare module Less {
-
     interface Options2 {
         filename?: string;
         plugins?: Plugin[];
@@ -15,7 +14,7 @@ declare module Less {
     }
 
     interface RelaxedLessStatic {
-        render(input: string, options: Options2): Promise<Less.RenderOutput>;
+        render(input: string, options: Options2): PromiseLike<Less.RenderOutput>;
     }
 
     interface Node {
