@@ -1,4 +1,4 @@
 declare module 'stream-to-array' {
-    function toArray(stream: NodeJS.ReadableStream): Promise<any[]>;
+    function toArray(stream: NodeJS.ReadableStream): PromiseLike<any[]>;
     export = toArray;
 }

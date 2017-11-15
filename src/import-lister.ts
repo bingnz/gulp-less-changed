@@ -29,14 +29,14 @@ module importLister {
             this.pathResolver = new PathResolver();
         }
 
-        private getLessData(file: File): Promise<string> {
+        private getLessData(file: File): PromiseLike<string> {
             if (file.isBuffer()) {
                 return new Promise<string>((resolve, reject) => {
                     process.nextTick(() => resolve(file.contents.toString()));
                 });
             }
 
-            return <Promise<string>>streamToArray(<NodeJS.ReadableStream>file.contents)
+            return streamToArray(<NodeJS.ReadableStream>file.contents)
                 .then((parts: any) => {
                     let buffers: Buffer[] = [];
                     for (let i = 0; i < parts.length; ++i) {
@@ -58,17 +58,17 @@ module importLister {
 
             options.plugins = options.plugins ? [dataUriVisitorPlugin, ...options.plugins] : [dataUriVisitorPlugin];
 
-            return this.getLessData(file)
+            return <Promise<any>>this.getLessData(file)
                 .then(lessData => {
-                    return (<Less.RelaxedLessStatic>less)
+                    return (((<Less.RelaxedLessStatic>less)
                         .render(lessData, options)
                         .then((value: any) => {
                             return Promise.join(Promise.resolve(value.imports),
                                 (Promise.map(dataUriVisitorPlugin.imports, i => this.pathResolver.resolve(i.directory, i.relativePath, options.paths))));
                         })
-                        .then(([fileImports, dataUriImports]: any[]) => {
+                        .then(([fileImports, dataUriImports]: any) => {
                             return Promise.resolve(fileImports.concat(dataUriImports));
-                        })
+                        })) as Promise<any>)
                         .catch((reason: any) => {
                             let error = `Failed to process imports for '${file.path}': ${reason}`;
                             console.error(error);
@@ -77,7 +77,7 @@ module importLister {
                 });
         }
 
-        public listImports(file: File): Promise<FileInfo[]> {
+        public listImports(file: File): PromiseLike<FileInfo[]> {
             if (!file) {
                 return Promise.resolve([]);
             }
@@ -96,7 +96,7 @@ module importLister {
                             .then((stat: fs.Stats) => { return { path: file, stat: stat } }))
 
                 })
-                .then((results: any[]): Promise<FileInfo[]> => {
+                .then((results: any[]) => {
                     let successfulResults = results.filter(info => !!info.stat);
                     successfulResults = successfulResults.map(i => { return { path: i.path, time: i.stat.mtime.getTime() } });
                     return Promise.resolve(successfulResults);

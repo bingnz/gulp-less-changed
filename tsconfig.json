@@ -1,14 +1,11 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es6",
         "module": "commonjs",
         "moduleResolution": "node",
         "noImplicitAny": true,
         "typeRoots": [
             "../node_modules/@types"
-        ],
-        "types": [
-            "core-js"
         ],
         "preserveConstEnums": true,
         "removeComments": true,
