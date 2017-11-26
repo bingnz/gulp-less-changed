@@ -15,6 +15,9 @@ node_js:
   - '6'
   - '5'
 
+env:
+  CODECLIMATE_REPO_TOKEN: 4bf8e178d6768b6bf836f766d2d10c6fa7c71a22448e10c464d3c29b240bcef6
+
 before_script:
   - npm prune
 
@@ -22,6 +25,8 @@ after_script:
   - npm run-script send-coverage
 
 after_success:
+  - npm install -g codeclimate-test-reporter
+  - codeclimate-test-reporter < coverage/remapped-lcov.info
   - npm run semantic-release
 
 branches:
