@@ -1,10 +1,10 @@
 'use strict';
-var chai = require('chai');
-var File = require('vinyl');
-var FakeFs = require('fake-fs');
-var streamAssert = require('stream-assert');
-var sinon = require('sinon');
-var proxyquire = require('proxyquire').noPreserveCache().noCallThru();
+import chai from 'chai';
+import File from 'vinyl';
+import FakeFs from 'fake-fs';
+import streamAssert from 'stream-assert';
+import sinon from 'sinon';
+const proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 
 const expect = chai.expect;
 

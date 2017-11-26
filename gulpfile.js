@@ -6,6 +6,7 @@ var through2 = require('through2');
 var os = require('os');
 var lazypipe = require('lazypipe');
 var remapIstanbul = require('remap-istanbul/lib/gulpRemapIstanbul');
+var babel = require('babel-core/register');
 
 var tsProject = plugins.typescript.createProject('tsconfig.json', {
     typescript: require('typescript')
@@ -50,7 +51,15 @@ gulp.task('pre-test', ['compile'], function () {
 
 gulp.task('test-and-coverage', ['pre-test'], function () {
     return gulp.src('test/**/*.js', { read: false })
-        .pipe(plugins.mocha({ reporter: 'spec' }))
+        .pipe(plugins.mocha({
+            reporter: 'spec',
+            require: [
+                'babel-polyfill'
+            ],
+            compilers: {
+                js: babel
+            },
+        }))
         .pipe(plugins.istanbul.writeReports());
 });
 
