@@ -5,10 +5,11 @@
 Analyses LESS files and their dependencies, i.e., imports and files included using `data-uri`, to save wasting time
 regenerating output.
 
-[![Build Status](https://travis-ci.org/bingnz/gulp-less-changed.svg?branch=master)](https://travis-ci.org/bingnz/gulp-less-changed)
-[![Coverage Status](https://coveralls.io/repos/github/bingnz/gulp-less-changed/badge.svg?branch=master)](https://coveralls.io/github/bingnz/gulp-less-changed?branch=master)
-
+[![Travis build status](http://img.shields.io/travis/bingnz/gulp-less-changed.svg?style=flat)](https://travis-ci.org/bingnz/gulp-less-changed)
+[![Code Climate](https://codeclimate.com/github/bingnz/gulp-less-changed/badges/gpa.svg)](https://codeclimate.com/github/bingnz/gulp-less-changed)
+[![Test Coverage](https://codeclimate.com/github/bingnz/gulp-less-changed/badges/coverage.svg)](https://codeclimate.com/github/bingnz/gulp-less-changed)
 [![Dependency Status](https://david-dm.org/bingnz/gulp-less-changed.svg)](https://david-dm.org/bingnz/gulp-less-changed)
+[![devDependency Status](https://david-dm.org/bingnz/gulp-less-changed/dev-status.svg)](https://david-dm.org/bingnz/gulp-less-changed#info=devDependencies)
 
 ## Install
 
@@ -108,7 +109,7 @@ If no options are specified, looks for a CSS file in the same path as the LESS f
 
 ## License
 
-Copyright (c) 2016 David Chandler
+Copyright (c) 2016-2017 David Chandler
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
