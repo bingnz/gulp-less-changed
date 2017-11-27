@@ -1,14 +1,14 @@
 'use strict';
 
-var chai = require('chai');
-var File = require('vinyl');
-var FakeFs = require('fake-fs');
-var path = require('path');
-var pmock = require('pmock');
-var through = require('through2');
-var Promise = require('bluebird');
-var sinon = require('sinon');
-var sinonChai = require('sinon-chai');
+import chai from 'chai';
+import File from 'vinyl';
+import FakeFs from 'fake-fs';
+import path from 'path';
+import pmock from 'pmock';
+import through from 'through2';
+import Promise from 'bluebird';
+import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 var proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 
 chai.use(sinonChai);

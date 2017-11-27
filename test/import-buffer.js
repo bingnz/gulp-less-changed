@@ -207,7 +207,7 @@ describe('import-buffer', () => {
             const tempFilePath = path.join(serialiseDir, mainFileDir + '_' + path.basename(mainFile.path));
 
             const serialisedImports = [{ path: 'import1.less', time: date1.getTime() }, { path: 'import2.less', time: date2.getTime() }];
-            spyContext.stub(fsStub, 'readFile', (path, done) => done(null, JSON.stringify(serialisedImports)));
+            spyContext.stub(fsStub, 'readFile').callsFake((path, done) => done(null, JSON.stringify(serialisedImports)));
 
             // the importer returns different files but we shouldn't call it again because the modified times
             // haven't changed

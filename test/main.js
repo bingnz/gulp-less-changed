@@ -4,14 +4,16 @@ import File from 'vinyl';
 import FakeFs from 'fake-fs';
 import streamAssert from 'stream-assert';
 import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 const proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 
 const expect = chai.expect;
+chai.use(sinonChai);
 
 function getLessChanged(options) {
     options = options || {};
-    let fsStub = options.fs || new FakeFs();
-    let listImportsStub = options.listImports || {
+    const fsStub = options.fs || new FakeFs();
+    const listImportsStub = options.listImports || {
         ImportLister: function () {
             return {
                 listImports: function () {
@@ -20,7 +22,7 @@ function getLessChanged(options) {
             }
         }
     };
-    let importBufferStub = options.importBuffer || {
+    const importBufferStub = options.importBuffer || {
         ImportBuffer: function (lister, key) {
             return {
                 listImports: function (file) {
@@ -30,7 +32,7 @@ function getLessChanged(options) {
         }
     };
 
-    let lessChanged = proxyquire('../release/main', { './import-lister': listImportsStub, './import-buffer': importBufferStub, 'fs': fsStub });
+    const lessChanged = proxyquire('../release/main', { './import-lister': listImportsStub, './import-buffer': importBufferStub, 'fs': fsStub });
     return lessChanged;
 }
 
@@ -130,7 +132,7 @@ describe('gulp-less-changed', () => {
 
         var fakeError = new Error('ENOENT');
         fakeError.code = 'ENOENT';
-        sinon.stub(fs, 'stat', file => {
+        sinon.stub(fs, 'stat').callsFake(file => {
             throw fakeError;
         });
 
@@ -163,7 +165,7 @@ describe('gulp-less-changed', () => {
 
             var fakeError = new Error('test');
             fakeError.code = 'SOMEERR';
-            sinon.stub(fs, 'stat', file => {
+            sinon.stub(fs, 'stat').callsFake(file => {
                 throw fakeError;
             });
 
@@ -477,7 +479,7 @@ describe('gulp-less-changed', () => {
                 }));
         });
 
-        it('should reuse import import lister for same paths', done => {
+        it('should reuse import lister for same paths', done => {
             let fs = new FakeFs();
             let date = new Date();
             const path1 = 'path1';
@@ -494,7 +496,7 @@ describe('gulp-less-changed', () => {
                 }
             };
 
-            sinon.spy(importLister, 'ImportLister');
+            sinon.spy(listImports, 'listImports');
 
             fs.file('main.css', { mtime: date });
 
@@ -517,7 +519,7 @@ describe('gulp-less-changed', () => {
 
                     lessChangedStream2
                         .pipe(streamAssert.end(() => {
-                            expect(importLister.ImportLister).to.have.been.called.once;
+                            expect(listImports.listImports).to.have.been.calledOnce;
                             done();
                         }));
                 }));
@@ -565,7 +567,7 @@ describe('gulp-less-changed', () => {
                         .pipe(streamAssert.end(() => {
                             expect(importLister.ImportLister).to.have.been.calledWith({ paths: [path1, path2] });
                             expect(importLister.ImportLister).to.have.been.calledWith({});
-                            expect(importLister.ImportLister).to.have.been.called.twice;
+                            expect(importLister.ImportLister).to.have.been.calledTwice;
                             done();
                         }));
                 }));
@@ -613,7 +615,7 @@ describe('gulp-less-changed', () => {
                         .pipe(streamAssert.end(() => {
                             expect(importLister.ImportLister).to.have.been.calledWith({ paths: [path1, path2], something: 'first' });
                             expect(importLister.ImportLister).to.have.been.calledWith({ paths: [path1, path2], something: 'second' });
-                            expect(importLister.ImportLister).to.have.been.called.twice;
+                            expect(importLister.ImportLister).to.have.been.calledTwice;
                             done();
                         }));
                 }));

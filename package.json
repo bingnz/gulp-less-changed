@@ -6,7 +6,7 @@
   "scripts": {
     "build": "gulp compile",
     "test": "gulp run-tests",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "semantic-release": "semantic-release"
   },
   "repository": {
     "type": "git",
@@ -27,44 +27,46 @@
   "devDependencies": {
     "@types/bluebird-global": "^3.5.3",
     "@types/gulp-util": "^3.0.34",
-    "@types/less": "https://registry.npmjs.org/@types/less/-/less-0.0.32.tgz",
-    "@types/mkdirp": "^0.3.29",
+    "@types/less": "^0.0.32",
+    "@types/mkdirp": "^0.5.1",
     "@types/through2": "^2.0.33",
     "@types/vinyl": "^2.0.1",
     "babel-core": "^6.26.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.1",
-    "chai": "^3.5.0",
+    "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "fake-fs": "^0.5.0",
     "gulp": "^3.9.1",
     "gulp-istanbul": "^1.1.2",
     "gulp-load-plugins": "^1.5.0",
-    "gulp-mocha": "^3.0.1",
-    "gulp-replace": "^0.5.4",
+    "gulp-mocha": "^4.3.1",
+    "gulp-replace": "^0.6.1",
     "gulp-sourcemaps": "^2.6.1",
     "gulp-typescript": "^3.2.3",
     "lazypipe": "^1.0.1",
+    "less": "^2.6.0",
     "merge2": "^1.2.0",
-    "mocha": "^3.5.3",
+    "mocha": "^4.0.1",
     "pmock": "^0.2.3",
     "proxyquire": "^1.8.0",
     "remap-istanbul": "^0.9.5",
-    "semantic-release": "^6.3.6",
-    "sinon": "^1.17.7",
+    "semantic-release": "^11.0.0",
+    "sinon": "^4.1.2",
     "sinon-chai": "^2.14.0",
     "stream-assert": "^2.0.3",
-    "typescript": "^2.6.1"
+    "typescript": "^2.6.2"
   },
   "dependencies": {
-    "bluebird": "^3.4.0",
-    "crypto": "0.0.3",
-    "gulp-util": "^3.0.7",
-    "less": "^2.6.0",
+    "bluebird": "^3.5.1",
+    "gulp-util": "^3.0.8",
     "mkdirp": "^0.5.1",
-    "object-assign": "^4.0.1",
+    "object-assign": "^4.1.1",
     "stream-to-array": "^2.3.0",
-    "through2": "^2.0.1",
-    "vinyl": "^2.0.1"
+    "through2": "^2.0.3",
+    "vinyl": "^2.1.0"
+  },
+  "peerDependencies": {
+    "less": "^2.6.0"
   }
 }
