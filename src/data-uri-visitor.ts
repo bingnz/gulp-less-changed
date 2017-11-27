@@ -21,35 +21,49 @@ module dataUriVisitor {
             return this._visitor.visit(root);
         }
 
-        public visitCall(ruleNode: Less.CallNode, visitArgs: any) {
-
-            if (ruleNode.name !== 'data-uri') {
-                return ruleNode;
-            }
-
-            if (ruleNode.args.length === 0) {
-                return ruleNode;
-            }
-
-            let argument: any;
+        private tryGetImportedFileName(ruleNode: Less.CallNode): string {
+            let fileName: any;
 
             if (ruleNode.args.length === 2) { // specifying MIME type.
-                argument = ruleNode.args[1];
+                fileName = ruleNode.args[1];
             } else {
-                argument = ruleNode.args[0];
+                fileName = ruleNode.args[0];
             }
 
-            if (!argument.value || /@/.test(argument.value)) {
+            if (!fileName.value || /@/.test(fileName.value)) {
+                return null;
+            }
+
+            return fileName.value;
+        }
+
+        private getImportInfo(ruleNode: Less.CallNode): { ruleNode: Less.CallNode, importedFile?: string, entryPath?: string } {
+            if (ruleNode.name !== 'data-uri' ||
+                ruleNode.args.length === 0) {
+                return { ruleNode };
+            }
+
+            const importedFile = this.tryGetImportedFileName(ruleNode);
+
+            if (!importedFile) {
+                return { ruleNode };
+            }
+
+            const entryPath = ruleNode.currentFileInfo.entryPath;
+
+            return { ruleNode, importedFile, entryPath };
+        }
+
+        public visitCall(callNode: Less.CallNode, visitArgs: any) {
+            const { ruleNode, importedFile, entryPath } = this.getImportInfo(callNode);
+
+            if (!importedFile) {
                 return ruleNode;
             }
-
-            const importedFile = argument.value;
-            const entryPath = ruleNode.currentFileInfo.entryPath;
 
             this._imports.push({ directory: entryPath ? path.normalize(entryPath) : '', relativePath: importedFile });
 
             return ruleNode;
-
         }
 
         public get imports(): Import[] {

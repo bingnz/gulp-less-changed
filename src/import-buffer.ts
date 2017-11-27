@@ -91,8 +91,7 @@ module listImports {
         }
 
         public async listImports(file: File): Promise<FileInfo[]> {
-
-            let useImportLister: () => Promise<FileInfo[]> = async () => {
+            const useImportLister: () => Promise<FileInfo[]> = async () => {
                 try {
                     const results = await this.importLister(file);
                     return await this.cacheResults(file.path, results);
