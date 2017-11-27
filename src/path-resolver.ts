@@ -1,10 +1,8 @@
-'use strict';
-
 import * as fs from 'fs';
 import * as path from 'path';
-import * as Promise from 'bluebird';
+import * as bluebird from 'bluebird';
 
-const fsAsync: any = Promise.promisifyAll(fs);
+const fsAsync: any = bluebird.promisifyAll(fs);
 
 module pathResolver {
     export class PathResolverError extends Error {
@@ -20,7 +18,19 @@ module pathResolver {
     }
 
     export class PathResolver {
-        public resolve(currentDirectory: string, inputPath: string, searchPaths: string[]): Promise<string> {
+        private async filterExistingPaths(pathsToTry: string[]) {
+            const checkedPaths = await Promise.all(pathsToTry.map(async path => {
+                try {
+                    await fsAsync.statAsync(path);
+                    return path;
+                } catch (error) {
+                    return null as string;
+                }
+            }));
+            return checkedPaths.filter(path => !!path);
+        }
+
+        public async resolve(currentDirectory: string, inputPath: string, searchPaths: string[]): Promise<string> {
             let pathsToTry = [path.join(currentDirectory, inputPath)];
 
             if (searchPaths) {
@@ -28,31 +38,15 @@ module pathResolver {
             }
 
             pathsToTry.push(path.join(process.cwd(), inputPath));
+            const resolvedPaths = await this.filterExistingPaths(pathsToTry);
 
-            return Promise.map(pathsToTry, path =>
-                fsAsync.statAsync(path)
-                    .then((stat: fs.Stats) => path)
-                    .catch((error: any) => {
-                        return <string>null;
-                    }))
-                .then(paths => {
-                    let index = -1;
-                    let foundPath = paths.some((path, i) => {
-                        let found = path !== null;
-                        if (found) {
-                            index = i;
-                        }
-                        return found;
-                    }) ? paths[index] : null;
-                    return foundPath;
-                })
-                .then(result => {
-                    if (result === null) {
-                        let triedPathsDisplay = pathsToTry.map(p => `'${p}'`).join(', ');
-                        throw new PathResolverError(`Import file '${inputPath}' wasn't found. Tried: ${triedPathsDisplay}.`);
-                    }
-                    return result;
-                });
+            const validPath = resolvedPaths[0];
+            if (!validPath) {
+                const triedPathsDisplay = pathsToTry.map(p => `'${p}'`).join(', ');
+                throw new PathResolverError(`Import file '${inputPath}' wasn't found. Tried: ${triedPathsDisplay}.`);
+            }
+
+            return validPath;
         }
     }
 }

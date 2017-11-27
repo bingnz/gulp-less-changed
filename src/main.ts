@@ -1,6 +1,6 @@
 'use strict';
 
-import * as Promise from 'bluebird';
+import * as bluebird from 'bluebird';
 import * as through from 'through2';
 import * as fs from 'fs';
 import * as gutil from 'gulp-util';
@@ -8,8 +8,10 @@ import { ImportLister } from './import-lister';
 import { ImportBuffer, FileInfo } from './import-buffer';
 import File = require('vinyl');
 import * as crypto from 'crypto';
+import { start } from 'repl';
+import { Transform } from 'stream';
 
-const fsAsync: any = Promise.promisifyAll(fs);
+const fsAsync: any = bluebird.promisifyAll(fs);
 
 const MODULE_NAME = 'gulp-less-changed';
 
@@ -20,81 +22,96 @@ module gulpLessChanged {
         getOutputFileName?: (input: string) => string;
     }
 
-    function checkImportsHaveChanged(file: File, mainFileDate: Date, importBuffer: ImportBuffer) {
-
-        function importHasChanged(importFile: FileInfo): boolean {
-            return importFile.time > mainFileDate.getTime();
-        }
-
-        return importBuffer.listImports(file)
-            .then(imports => {
-                return imports.some(importHasChanged);
-            })
-    }
-
     interface IntermediateResult {
         outputAge: Date,
         changed: boolean
     }
 
-    export function run(options?: gulpLessChanged.PluginOptions) {
-        options = options || {};
-        let getOutputFileName = options.getOutputFileName || (input => gutil.replaceExtension(input, '.css'));
-
-        let importLister = new ImportLister(options);
-
-        let instanceKey =  crypto.createHash('md5').update(__dirname + JSON.stringify(options)).digest('hex');
-        let bufferKey = `${MODULE_NAME}-${instanceKey}`;
-        let importBuffer = new ImportBuffer(importLister.listImports.bind(importLister), bufferKey);
- 
-        function transform(file: File, enc: string, callback: (error: any, data: any) => any) {
-
-            if (file.isNull()) {
-                return callback(null, null);
-            }
-
-            let outputFile = getOutputFileName(file.path);
-
-            fsAsync.statAsync(outputFile)
-                .then((stats: fs.Stats) => {
-                    if (stats.mtime < file.stat.mtime) {
-                        this.push(file);
-                        return { outputAge: stats.mtime, changed: true };
-                    }
-
-                    return { outputAge: stats.mtime, changed: false };
-                }, (error: NodeJS.ErrnoException): IntermediateResult => {
-                    if (error.code === 'ENOENT') {
-                        this.push(file);
-                        return { outputAge: null, changed: true };
-                    }
-
-                    throw error;
-                })
-                .then((intermediateResult: IntermediateResult) => {
-                    if (intermediateResult.changed) {
-                        return false;
-                    }
-
-                    return checkImportsHaveChanged(file, intermediateResult.outputAge, importBuffer)
-                        .catch(error => {
-                            console.error(error);
-                            return true;
-                        });
-                })
-                .then((importsHaveChanged: boolean) => {
-                    if (importsHaveChanged) {
-                        this.push(file);
-                    }
-                })
-                .then(() => callback(null, null))
-                .catch((error: any) => {
-                    this.emit('error', new gutil.PluginError(MODULE_NAME, `Error processing \'${file.path}\': ${error}`));
-                    callback(null, null);
-                });
+    class ImportChecker {
+        private getOutputFileName: (input: string) => string;
+        constructor(private options: PluginOptions, private importBuffer: ImportBuffer) {
+            this.getOutputFileName = options.getOutputFileName || (input => gutil.replaceExtension(input, '.css'));
         }
 
-        return through.obj(transform);
+        private async checkImportsHaveChanged(file: File, mainFileDate: Date) {
+
+            function importHasChanged(importFile: FileInfo): boolean {
+                return importFile.time > mainFileDate.getTime();
+            }
+
+            try {
+                const imports = await this.importBuffer.listImports(file);
+                return imports.some(importHasChanged);
+            } catch (error) {
+                console.error(error);
+                return true;
+            }
+        }
+
+        private async hasFileChanged(inputFile: File, outputFilePath: string) {
+            try {
+                const stats = await fsAsync.statAsync(outputFilePath);
+                return { modifiedTime: stats.mtime, hasFileChanged: stats.mtime < inputFile.stat.mtime };
+            } catch (error) {
+                if (error.code === 'ENOENT') {
+                    return { modifiedTime: undefined, hasFileChanged: true };
+                } else {
+                    throw error;
+                }
+            }
+        }
+
+        private async hasFileOrDependenciesChanged(
+            inputFile: File,
+            outputFilePath: string) {
+
+            const { modifiedTime, hasFileChanged } = await this.hasFileChanged(inputFile, outputFilePath);
+            if (hasFileChanged) {
+                return true;
+            }
+
+            return await this.checkImportsHaveChanged(inputFile, modifiedTime);
+        }
+
+        public async checkFileForChanges(
+            transform: Transform,
+            file: File, enc: string, callback: (error: any, data: any) => any) {
+
+            if (file.isNull()) {
+                callback(null, null);
+                return;
+            }
+
+            try {
+                const changed = await this.hasFileOrDependenciesChanged(file, this.getOutputFileName(file.path));
+
+                if (changed) {
+                    transform.push(file);
+                }
+            }
+            catch (error) {
+                transform.emit('error', new gutil.PluginError(MODULE_NAME, `Error processing \'${file.path}\': ${error}`));
+            }
+            finally {
+                callback(null, null);
+            }
+        }
+    }
+
+    export function run(options?: gulpLessChanged.PluginOptions) {
+        options = options || {};
+
+        const importLister = new ImportLister(options);
+
+        const instanceKey = crypto.createHash('md5').update(__dirname + JSON.stringify(options)).digest('hex');
+        const bufferKey = `${MODULE_NAME}-${instanceKey}`;
+        const importBuffer = new ImportBuffer(importLister.listImports.bind(importLister), bufferKey);
+
+        const importChecker = new ImportChecker(options, importBuffer);
+
+        return through.obj(function (file: File, enc: string, callback: (error: any, data: any) => any) {
+            importChecker.checkFileForChanges(this, file, enc, callback);
+        });
     }
 }
 

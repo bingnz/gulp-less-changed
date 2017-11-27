@@ -1,16 +1,14 @@
-'use strict';
-
 import File = require('vinyl');
 import * as fs from 'fs';
 import * as less from 'less';
 import * as path from 'path';
 import streamToArray = require('stream-to-array');
-import * as Promise from 'bluebird';
+import * as bluebird from 'bluebird';
 import { FileInfo } from './import-buffer';
 import { PathResolver } from './path-resolver';
 import { DataUriVisitorPlugin } from './data-uri-visitor-plugin';
 
-const fsAsync: any = Promise.promisifyAll(fs);
+const fsAsync: any = bluebird.promisifyAll(fs);
 
 const assign = require('object-assign');
 
@@ -29,78 +27,74 @@ module importLister {
             this.pathResolver = new PathResolver();
         }
 
-        private getLessData(file: File): PromiseLike<string> {
+        private async getLessData(file: File) {
             if (file.isBuffer()) {
                 return new Promise<string>((resolve, reject) => {
                     process.nextTick(() => resolve(file.contents.toString()));
                 });
             }
 
-            return streamToArray(<NodeJS.ReadableStream>file.contents)
-                .then((parts: any) => {
-                    let buffers: Buffer[] = [];
-                    for (let i = 0; i < parts.length; ++i) {
-                        let part = parts[i];
-                        buffers.push(Buffer.from(part));
-                    }
-                    return Buffer.concat(buffers).toString();
-                });
+            const parts = await streamToArray(<NodeJS.ReadableStream>file.contents);
+            const buffers: Buffer[] = [];
+            for (let i = 0; i < parts.length; ++i) {
+                const part = parts[i];
+                buffers.push(Buffer.from(part));
+            }
+            return Buffer.concat(buffers).toString();
         }
 
-        private listImportsInternal(file: File): Promise<string[]> {
+        private async listImportsInternal(file: File): Promise<string[]> {
             if (file == null || file.isNull()) {
                 console.error('Trying to process imports for null file.')
-                return Promise.resolve([]);
+                return [];
             }
 
-            let dataUriVisitorPlugin = new DataUriVisitorPlugin();
-            let options: Less.Options2 = assign({ filename: file.path }, this.lessOptions);
+            const dataUriVisitorPlugin = new DataUriVisitorPlugin();
+            const options: Less.Options2 = assign({ filename: file.path }, this.lessOptions);
 
             options.plugins = options.plugins ? [dataUriVisitorPlugin, ...options.plugins] : [dataUriVisitorPlugin];
 
-            return <Promise<any>>this.getLessData(file)
-                .then(lessData => {
-                    return (((<Less.RelaxedLessStatic>less)
-                        .render(lessData, options)
-                        .then((value: any) => {
-                            return Promise.join(Promise.resolve(value.imports),
-                                (Promise.map(dataUriVisitorPlugin.imports, i => this.pathResolver.resolve(i.directory, i.relativePath, options.paths))));
-                        })
-                        .then(([fileImports, dataUriImports]: any) => {
-                            return Promise.resolve(fileImports.concat(dataUriImports));
-                        })) as Promise<any>)
-                        .catch((reason: any) => {
-                            let error = `Failed to process imports for '${file.path}': ${reason}`;
-                            console.error(error);
-                            return Promise.reject(new Error(error));
-                        });
-                });
+            try {
+                const lessData = await this.getLessData(file);
+                const renderResult = await (less as Less.RelaxedLessStatic).render(lessData, options);
+                const dataUriImports = await Promise.all(dataUriVisitorPlugin.imports
+                    .map(i => this.pathResolver.resolve(i.directory, i.relativePath, options.paths)));
+                return [...renderResult.imports, ...dataUriImports];
+            }
+            catch (reason) {
+                const error = `Failed to process imports for '${file.path}': ${reason}`;
+                console.error(error);
+                throw new Error(error);
+            }
         }
 
-        public listImports(file: File): PromiseLike<FileInfo[]> {
+        private async getFileStatsIfExists(file: string) {
+            try {
+                const stat = await fsAsync.statAsync(file);
+                return { path: file, stat: stat };
+            }
+            catch (error) {
+                if (error.code === 'ENOENT') {
+                    console.error(`Import '${file}' not found.`);
+                    return null;
+                }
+                throw error;
+            }
+        }
+
+        private async getExistingFiles(files: string[]) {
+            const results = await Promise.all(files.map(this.getFileStatsIfExists));
+            return results.filter(info => !!info && !!info.stat);
+        }
+
+        public async listImports(file: File): Promise<FileInfo[]> {
             if (!file) {
-                return Promise.resolve([]);
+                return [];
             }
 
-            return this.listImportsInternal(file)
-                .then((files: string[]) => {
-                    return Promise.map(files, file =>
-                        fsAsync.statAsync(file)
-                            .catch(Error, (error: NodeJS.ErrnoException) => {
-                                if (error.code === 'ENOENT') {
-                                    console.error(`Import '${file}' not found.`);
-                                    return Promise.resolve(null);
-                                }
-                                return Promise.reject(error);
-                            })
-                            .then((stat: fs.Stats) => { return { path: file, stat: stat } }))
+            const files = await this.getExistingFiles(await this.listImportsInternal(file));
 
-                })
-                .then((results: any[]) => {
-                    let successfulResults = results.filter(info => !!info.stat);
-                    successfulResults = successfulResults.map(i => { return { path: i.path, time: i.stat.mtime.getTime() } });
-                    return Promise.resolve(successfulResults);
-                });
+            return files.map(i => { return { path: i.path, time: i.stat.mtime.getTime() } });
         }
     }
 }
