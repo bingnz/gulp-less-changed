@@ -6,7 +6,6 @@
   "scripts": {
     "build": "gulp compile",
     "test": "gulp run-tests",
-    "send-coverage": "cat ./coverage/remapped-lcov.info | coveralls",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "repository": {
@@ -37,7 +36,6 @@
     "babel-preset-env": "^1.6.1",
     "chai": "^3.5.0",
     "chai-as-promised": "^7.1.1",
-    "coveralls": "^3.0.0",
     "fake-fs": "^0.5.0",
     "gulp": "^3.9.1",
     "gulp-istanbul": "^1.1.2",
