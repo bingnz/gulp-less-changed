@@ -2,3 +2,4 @@ node_modules
 release
 *.map
 coverage
+/.nyc_output
