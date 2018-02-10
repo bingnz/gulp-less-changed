@@ -4,8 +4,9 @@
   "description": "Only pass .less files through the gulp stream if they or their dependencies have changed",
   "main": "release/main.js",
   "scripts": {
-    "build": "gulp compile",
+    "build": "gulp",
     "test": "nyc mocha && node generate-coverage-reports",
+    "clean": "gulp clean",
     "semantic-release": "semantic-release"
   },
   "repository": {
@@ -37,6 +38,7 @@
     "babel-preset-env": "^1.6.1",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
+    "del": "^3.0.0",
     "fake-fs": "^0.5.0",
     "gulp": "^4.0.0",
     "gulp-cli": "^2.0.1",

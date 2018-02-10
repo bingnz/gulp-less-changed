@@ -3,6 +3,7 @@ import path from 'path';
 import merge from 'merge2';
 const plugins = require('gulp-load-plugins')();
 import lazypipe from 'lazypipe';
+import del from 'del';
 
 var tsProject = plugins.typescript.createProject('tsconfig.json', {
     typescript: require('typescript')
@@ -17,7 +18,13 @@ function istanbulTypeScriptIgnores() {
         .pipe(plugins.replace, /(var _this = _super\.call)/, ignoreReplacement)();
 }
 
-export function compile() {
+function clean() {
+    return del(['release', 'coverage', '.nyc_output']);
+}
+
+gulp.task('clean', clean);
+
+function compile() {
     var tsResult = gulp.src(['src/**/*.ts', 'custom-typings/*.d.ts'])
         .pipe(plugins.sourcemaps.init())
         .pipe(tsProject());
@@ -37,4 +44,8 @@ export function compile() {
     ]);
 }
 
-export default compile;
+gulp.task('compile', compile);
+
+const build = gulp.series('clean', 'compile');
+
+export default build;
