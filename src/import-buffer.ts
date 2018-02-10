@@ -1,6 +1,4 @@
-'use strict';
-
-import File = require('vinyl');
+import * as File from 'vinyl';
 import * as fs from 'fs';
 import * as bluebird from 'bluebird';
 import * as path from 'path';

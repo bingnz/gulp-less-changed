@@ -1,4 +1,4 @@
-import File = require('vinyl');
+import * as File from 'vinyl';
 import * as fs from 'fs';
 import * as less from 'less';
 import * as path from 'path';

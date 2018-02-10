@@ -26,9 +26,10 @@
   "homepage": "https://github.com/bingnz/gulp-less-changed#readme",
   "devDependencies": {
     "@types/bluebird-global": "^3.5.4",
-    "@types/gulp-util": "^3.0.34",
     "@types/less": "^0.0.32",
     "@types/mkdirp": "^0.5.2",
+    "@types/plugin-error": "^0.1.0",
+    "@types/replace-ext": "0.0.27",
     "@types/through2": "^2.0.33",
     "@types/vinyl": "^2.0.2",
     "babel-core": "^6.26.0",
@@ -59,9 +60,10 @@
   },
   "dependencies": {
     "bluebird": "^3.5.1",
-    "gulp-util": "^3.0.8",
     "mkdirp": "^0.5.1",
     "object-assign": "^4.1.1",
+    "plugin-error": "^1.0.1",
+    "replace-ext": "^1.0.0",
     "stream-to-array": "^2.3.0",
     "through2": "^2.0.3",
     "vinyl": "^2.1.0"
