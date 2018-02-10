@@ -4,8 +4,9 @@
   "description": "Only pass .less files through the gulp stream if they or their dependencies have changed",
   "main": "release/main.js",
   "scripts": {
-    "build": "gulp compile",
+    "build": "gulp",
     "test": "nyc mocha && node generate-coverage-reports",
+    "clean": "gulp clean",
     "semantic-release": "semantic-release"
   },
   "repository": {
@@ -26,9 +27,10 @@
   "homepage": "https://github.com/bingnz/gulp-less-changed#readme",
   "devDependencies": {
     "@types/bluebird-global": "^3.5.4",
-    "@types/gulp-util": "^3.0.34",
     "@types/less": "^0.0.32",
     "@types/mkdirp": "^0.5.2",
+    "@types/plugin-error": "^0.1.0",
+    "@types/replace-ext": "0.0.27",
     "@types/through2": "^2.0.33",
     "@types/vinyl": "^2.0.2",
     "babel-core": "^6.26.0",
@@ -36,8 +38,10 @@
     "babel-preset-env": "^1.6.1",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
+    "del": "^3.0.0",
     "fake-fs": "^0.5.0",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.0",
+    "gulp-cli": "^2.0.1",
     "gulp-load-plugins": "^1.5.0",
     "gulp-replace": "^0.6.1",
     "gulp-sourcemaps": "^2.6.4",
@@ -59,9 +63,10 @@
   },
   "dependencies": {
     "bluebird": "^3.5.1",
-    "gulp-util": "^3.0.8",
     "mkdirp": "^0.5.1",
     "object-assign": "^4.1.1",
+    "plugin-error": "^1.0.1",
+    "replace-ext": "^1.0.0",
     "stream-to-array": "^2.3.0",
     "through2": "^2.0.3",
     "vinyl": "^2.1.0"

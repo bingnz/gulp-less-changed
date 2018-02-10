@@ -1,10 +1,9 @@
-var gulp = require('gulp');
-var path = require('path');
-var merge = require('merge2');
-var plugins = require('gulp-load-plugins')();
-var through2 = require('through2');
-var os = require('os');
-var lazypipe = require('lazypipe');
+import gulp from 'gulp';
+import path from 'path';
+import merge from 'merge2';
+const plugins = require('gulp-load-plugins')();
+import lazypipe from 'lazypipe';
+import del from 'del';
 
 var tsProject = plugins.typescript.createProject('tsconfig.json', {
     typescript: require('typescript')
@@ -19,7 +18,13 @@ function istanbulTypeScriptIgnores() {
         .pipe(plugins.replace, /(var _this = _super\.call)/, ignoreReplacement)();
 }
 
-gulp.task('compile', function () {
+function clean() {
+    return del(['release', 'coverage', '.nyc_output']);
+}
+
+gulp.task('clean', clean);
+
+function compile() {
     var tsResult = gulp.src(['src/**/*.ts', 'custom-typings/*.d.ts'])
         .pipe(plugins.sourcemaps.init())
         .pipe(tsProject());
@@ -37,6 +42,10 @@ gulp.task('compile', function () {
             }))
             .pipe(gulp.dest('release'))
     ]);
-});
+}
 
-gulp.task('default', ['compile']);
+gulp.task('compile', compile);
+
+const build = gulp.series('clean', 'compile');
+
+export default build;

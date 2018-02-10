@@ -1,12 +1,11 @@
-'use strict';
-
 import * as bluebird from 'bluebird';
 import * as through from 'through2';
 import * as fs from 'fs';
-import * as gutil from 'gulp-util';
+import replaceExtension = require('replace-ext');
+import * as PluginError from 'plugin-error';
 import { ImportLister } from './import-lister';
 import { ImportBuffer, FileInfo } from './import-buffer';
-import File = require('vinyl');
+import * as File from 'vinyl';
 import * as crypto from 'crypto';
 import { start } from 'repl';
 import { Transform } from 'stream';
@@ -30,7 +29,7 @@ module gulpLessChanged {
     class ImportChecker {
         private getOutputFileName: (input: string) => string;
         constructor(private options: PluginOptions, private importBuffer: ImportBuffer) {
-            this.getOutputFileName = options.getOutputFileName || (input => gutil.replaceExtension(input, '.css'));
+            this.getOutputFileName = options.getOutputFileName || (input => replaceExtension(input, '.css'));
         }
 
         private async checkImportsHaveChanged(file: File, mainFileDate: Date) {
@@ -90,7 +89,7 @@ module gulpLessChanged {
                 }
             }
             catch (error) {
-                transform.emit('error', new gutil.PluginError(MODULE_NAME, `Error processing \'${file.path}\': ${error}`));
+                transform.emit('error', new PluginError(MODULE_NAME, `Error processing \'${file.path}\': ${error}`));
             }
             finally {
                 callback(null, null);
