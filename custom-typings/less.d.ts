@@ -18,7 +18,9 @@ declare module Less {
     }
 
     interface Node {
-        currentFileInfo: RootFileInfo;
+        fileInfo?(): RootFileInfo;
+        currentFileInfo?: RootFileInfo;
+
         name: string;
     }
 

@@ -10,7 +10,10 @@ import through from 'through2';
 import Promise from 'bluebird';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
+import sinonTest from 'sinon-test';
 import chaiAsPromised from 'chai-as-promised';
+import lessLatest from 'less';
+import less272 from 'less@2.7.2';
 
 const proxyquire = require('proxyquire').noPreserveCache().noCallThru();
 
@@ -18,10 +21,11 @@ const fsAsync = Promise.promisifyAll(fs);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+sinon.test = sinonTest(sinon);
 
 const expect = chai.expect;
 
-function getImportLister(options) {
+function getImportListerCore(options) {
     options = options || {};
 
     const proxies = {};
@@ -68,8 +72,19 @@ function readFileAsStream(file, type) {
     });
 }
 
-describe('import-lister', () => {
+[
+    { description: 'when using latest version of less', version: lessLatest },
+    { description: 'when using less 2.7.2', version: less272 }
+].map(less =>
+describe(`import-lister ${less.description} `, () => {
     let importLister;
+    const getImportLister = options => {
+        if (options && options.less) {
+            delete options.less;
+        }
+        return getImportListerCore(Object.assign({ less: less.version }, options));
+    };
+
     beforeEach(() => {
         importLister = new (getImportLister());
     });
@@ -143,7 +158,7 @@ describe('import-lister', () => {
                 'test!list-imports-cases!file-with-data-uri!image.svg']);
         });
 
-        it('should use the path resolver to resolve the import file', async () => {
+        it('should use the path resolver to resolve the import file', () => sinon.test(async () => {
             const resolvedPath = 'some/path/image.svg';
             const resolverFunction = {
                 resolve: function () {
@@ -169,9 +184,9 @@ describe('import-lister', () => {
             expect(importList.map(x => x.path.split(path.sep).join('!'))).to.deep.equal([
                 resolvedPath.split(path.sep).join('!')]);
             expect(resolverFunction.resolve).to.have.been.calledWith(path.normalize('./test/list-imports-cases/file-with-data-uri/'), 'image.svg');
-        });
+        }));
 
-        it('should keep absolute path for import files', async () => {
+        it('should keep absolute path for import files', () => sinon.test(async () => {
             const relativePath = 'some/path/image.svg';
             const absolutePath = path.join(process.cwd(), relativePath);
             const resolverFunction = {
@@ -194,9 +209,9 @@ describe('import-lister', () => {
 
             const importList = await importLister.listImports(new File({ path: 'x', contents: new Buffer(`@a: data-uri('${absolutePath}');`) }));
             expect(resolverFunction.resolve).to.have.been.calledWith('', absolutePath.replace(/\//g, path.sep));
-        });
+        }));
 
-        it('should not return import if an error occurs in the path resolution', async () => {
+        it('should not return import if an error occurs in the path resolution', () => sinon.test(async () => {
             const resolverFunction = {
                 resolve: function () {
                     return Promise.reject(new Error('Some error'));
@@ -214,9 +229,9 @@ describe('import-lister', () => {
 
             const f = await readFile(new File({ path: filePath }));
             await expect(importLister.listImports(f)).to.eventually.be.rejectedWith(Error, /Some error/);
-        });
+        }));
 
-        it('should not return import if the import file does not exist', async () => {
+        it('should not return import if the import file does not exist', () => sinon.test(async () => {
             const resolverFunction = {
                 resolve: function () {
                     return Promise.resolve(filePath);
@@ -237,9 +252,9 @@ describe('import-lister', () => {
             const imports = await importLister.listImports(f);
             expect(imports).to.be.empty;
             expect(console.error).to.have.been.calledWith(`Import '${filePath}' not found.`);
-        });
+        }));
 
-        it('should propagate unknown error during file resolution', async () => {
+        it('should propagate unknown error during file resolution', sinon.test(async () => {
             const resolverFunction = {
                 resolve: function () {
                     return Promise.resolve(filePath);
@@ -259,9 +274,9 @@ describe('import-lister', () => {
 
             const f = await readFile(new File({ path: filePath }));
             await expect(importLister.listImports(f)).to.eventually.be.rejectedWith(/bad/);
-        });
+        }));
 
-        it('should pass provided paths to the path resolver', async () => {
+        it('should pass provided paths to the path resolver', sinon.test(async () => {
             const resolvedPath = 'some/path/image.svg';
             const path1 = 'pathA';
             const path2 = 'path/B';
@@ -286,8 +301,8 @@ describe('import-lister', () => {
 
             const f = await readFile(new File({ path: filePath }));
             await importLister.listImports(f);
-            expect(resolverFunction.resolve).to.have.been.calledWith(sinon.match.string, sinon.match.string, [path1, path2]);
-        });
+            expect(resolverFunction.resolve).to.have.been.calledWith(sinon.match.string, sinon.match.string, sinon.match.array.contains([path1, path2]));
+        }));
     });
 
     describe('when passing in a file with a data-uri with MIME type and import by reference', () => {
@@ -309,7 +324,7 @@ describe('import-lister', () => {
             expect(importList).to.be.empty;
         });
 
-        it('should not use the path resolver', async () => {
+        it('should not use the path resolver', sinon.test(async () => {
             const resolvedPath = 'some/path/image.svg';
             const resolverFunction = {
                 resolve: function () {
@@ -333,7 +348,7 @@ describe('import-lister', () => {
             const importList = await importLister.listImports(f);
             expect(importList).to.be.empty;
             expect(resolverFunction.resolve).not.to.have.been.called;
-        });
+        }));
     });
 
     describe('when passing in a file with a data-uri with an interpolated variable', () => {
@@ -344,7 +359,7 @@ describe('import-lister', () => {
             expect(importList).to.be.empty;
         });
 
-        it('should not use the path resolver', async () => {
+        it('should not use the path resolver', sinon.test(async () => {
             const resolvedPath = 'some/path/image.svg';
             const resolverFunction = {
                 resolve: function () {
@@ -368,7 +383,7 @@ describe('import-lister', () => {
             const importList = await importLister.listImports(f);
             expect(importList).to.be.empty;
             expect(resolverFunction.resolve).not.to.have.been.called;
-        });
+        }));
     });
 
     describe('when passing in a file as a buffered stream', () => {
@@ -395,64 +410,7 @@ describe('import-lister', () => {
         });
     });
 
-    describe('when paths are specified', () => {
-        const filePath = './test/list-imports-cases/file-with-import/file.less';
-        it('should pass the paths to the less render function', async () => {
-            const path1 = 'a/b/c';
-            const path2 = 'd/e/f';
-            const path3 = 'g/h/i';
-
-            const lessStub = { render: () => Promise.resolve({ imports: [] }) };
-            sinon.spy(lessStub, 'render');
-
-            importLister = new (getImportLister({ less: lessStub }))({ paths: [path1, path2, path3] });
-
-            const f = await readFile(new File({ path: filePath }));
-            await importLister.listImports(f);
-            expect(lessStub.render).to.have.been.calledWith(sinon.match.string, sinon.match({ 'paths': [path1, path2, path3] }));
-        });
-
-        it('should not alter paths array', async () => {
-            const path1 = 'a/b/c';
-            const path2 = 'd/e/f';
-            const path3 = 'g/h/i';
-
-            const lessStub = { render: () => Promise.resolve({ imports: [] }) };
-
-            const paths = [path1, path2, path3];
-            importLister = new (getImportLister({ less: lessStub }))({ paths: paths });
-
-            const file = new File({ path: filePath, contents: new Buffer('fake') });
-            await importLister.listImports(file);
-            expect(paths).to.deep.equal([path1, path2, path3]);
-        });
-    });
-
     describe('when options are specified', () => {
-        it('should pass the original options to the less render function', async () => {
-            const lessStub = { render: () => Promise.resolve({ imports: [] }) };
-            sinon.spy(lessStub, 'render');
-
-            importLister = new (getImportLister({ less: lessStub }))({ some: 'option' });
-
-            const fakeFile = new File({ path: 'something.less', contents: new Buffer('') });
-            await importLister.listImports(fakeFile);
-            expect(lessStub.render).to.have.been.calledWith(sinon.match.string, sinon.match({ some: 'option' }));
-        });
-
-        it('should pass specified plugins to the less render function', async () => {
-            const lessStub = { render: () => Promise.resolve({ imports: [] }) };
-            const renderSpy = sinon.spy(lessStub, 'render');
-
-            const myPlugin = { install: function () { } };
-            importLister = new (getImportLister({ less: lessStub }))({ some: 'option', plugins: [myPlugin] });
-
-            const fakeFile = new File({ path: 'something.less', contents: new Buffer('') });
-            await importLister.listImports(fakeFile);
-            const plugins = renderSpy.getCall(0).args[1].plugins;
-            expect(plugins).to.include(myPlugin);
-        });
-
         it('should still process data-uri correctly when passing specified plugins to the less render function', async () => {
             const resolverFunction = {
                 resolve: function (path, file) {
@@ -499,23 +457,10 @@ describe('import-lister', () => {
             expect(importList.map(i => i.path)).to.include(
                 './test/list-imports-cases/file-with-import/file.less');
         });
-
-        it('should not alter original options', async () => {
-            const lessStub = { render: () => Promise.resolve({ imports: [] }) };
-            sinon.spy(lessStub, 'render');
-
-            const options = { a: 'b', c: 'd' };
-            importLister = new (getImportLister({ less: lessStub }))(options);
-
-            const fakeFile = new File({ path: 'something.less', contents: new Buffer('') });
-
-            await importLister.listImports(fakeFile);
-            expect(options).to.deep.equal({ a: 'b', c: 'd' });
-        });
     });
 
     describe('when a data-uri call is invalid', () => {
-        it('should throw an error', async () => {
+        it('should throw an error', sinon.test(async () => {
             const resolverFunction = {
                 resolve: function (path, file) {
                     return Promise.resolve(file);
@@ -533,6 +478,78 @@ describe('import-lister', () => {
 
             await expect(importLister.listImports(new File({ path: 'x', contents: new Buffer('@a: data-uri();') })))
                 .to.eventually.be.rejectedWith(/Failed to process imports/);
-        });
+        }));
+    });
+}));
+
+describe("when options are specified", () => {
+    it('should pass the original options to the less render function', sinon.test(async () => {
+        const lessStub = { render: () => Promise.resolve({ imports: [] }) };
+        sinon.spy(lessStub, 'render');
+
+        const importLister = new (getImportListerCore({ less: lessStub }))({ some: 'option' });
+
+        const fakeFile = new File({ path: 'something.less', contents: new Buffer('') });
+        await importLister.listImports(fakeFile);
+        expect(lessStub.render).to.have.been.calledWith(sinon.match.string, sinon.match({ some: 'option' }));
+    }));
+
+    it('should pass specified plugins to the less render function', sinon.test(async () => {
+        const lessStub = { render: () => Promise.resolve({ imports: [] }) };
+        const renderSpy = sinon.spy(lessStub, 'render');
+
+        const myPlugin = { install: function () { } };
+        const importLister = new (getImportListerCore({ less: lessStub }))({ some: 'option', plugins: [myPlugin] });
+
+        const fakeFile = new File({ path: 'something.less', contents: new Buffer('') });
+        await importLister.listImports(fakeFile);
+        const plugins = renderSpy.getCall(0).args[1].plugins;
+        expect(plugins).to.include(myPlugin);
+    }));
+
+    it('should not alter original options', sinon.test(async () => {
+        const lessStub = { render: () => Promise.resolve({ imports: [] }) };
+        sinon.spy(lessStub, 'render');
+
+        const options = { a: 'b', c: 'd' };
+        const importLister = new (getImportListerCore({ less: lessStub }))(options);
+
+        const fakeFile = new File({ path: 'something.less', contents: new Buffer('') });
+
+        await importLister.listImports(fakeFile);
+        expect(options).to.deep.equal({ a: 'b', c: 'd' });
+    }));
+});
+
+describe('when paths are specified', () => {
+    const filePath = './test/list-imports-cases/file-with-import/file.less';
+    it('should pass the paths to the less render function', sinon.test(async () => {
+        const path1 = 'a/b/c';
+        const path2 = 'd/e/f';
+        const path3 = 'g/h/i';
+
+        const lessStub = { render: () => Promise.resolve({ imports: [] }) };
+        sinon.spy(lessStub, 'render');
+
+        const importLister = new (getImportListerCore({ less: lessStub }))({ paths: [path1, path2, path3] });
+
+        const f = await readFile(new File({ path: filePath }));
+        await importLister.listImports(f);
+        expect(lessStub.render).to.have.been.calledWith(sinon.match.string, sinon.match({ 'paths': [path1, path2, path3] }));
+    }));
+
+    it('should not alter paths array', async () => {
+        const path1 = 'a/b/c';
+        const path2 = 'd/e/f';
+        const path3 = 'g/h/i';
+
+        const lessStub = { render: () => Promise.resolve({ imports: [] }) };
+
+        const paths = [path1, path2, path3];
+        const importLister = new (getImportListerCore({ less: lessStub }))({ paths: paths });
+
+        const file = new File({ path: filePath, contents: new Buffer('fake') });
+        await importLister.listImports(file);
+        expect(paths).to.deep.equal([path1, path2, path3]);
     });
 });
