@@ -49,7 +49,8 @@ module dataUriVisitor {
                 return { ruleNode };
             }
 
-            const entryPath = ruleNode.currentFileInfo.entryPath;
+            const fileInfo = typeof ruleNode.fileInfo === 'function' ? ruleNode.fileInfo() : ruleNode.currentFileInfo;
+            const entryPath = fileInfo.entryPath;
 
             return { ruleNode, importedFile, entryPath };
         }
