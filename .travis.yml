@@ -25,7 +25,13 @@ script:
 after_success:
   - npm install -g codeclimate-test-reporter
   - codeclimate-test-reporter < coverage/lcov.info
-  - npm run semantic-release
+
+jobs:
+  include:
+    - stage: release
+      node_js: '9'
+      script:
+        - npm run semantic-release
 
 branches:
   except:
