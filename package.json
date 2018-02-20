@@ -5,10 +5,9 @@
   "main": "release/main.js",
   "scripts": {
     "build": "gulp",
-    "test": "nyc mocha && node generate-coverage-reports",
+    "test": "niv less@2.7.2 && nyc mocha && node generate-coverage-reports",
     "clean": "gulp clean",
-    "semantic-release": "semantic-release",
-    "postinstall": "niv less@2.7.2"
+    "semantic-release": "semantic-release"
   },
   "repository": {
     "type": "git",
