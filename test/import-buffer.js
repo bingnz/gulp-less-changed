@@ -77,7 +77,7 @@ describe('import-buffer', () => {
         let spyContext;
 
         beforeEach(() => {
-            spyContext = sinon.sandbox.create();
+            spyContext = sinon.createSandbox();
             mkdirpStub = spyContext.stub().callsArg(1);
 
             date1 = new Date();
@@ -97,7 +97,7 @@ describe('import-buffer', () => {
         });
 
         afterEach(() => {
-            sinon.sandbox.restore();
+            spyContext.restore();
         });
 
         it('should provide stats for existing imports', async () => {
@@ -269,7 +269,7 @@ describe('import-buffer', () => {
         it('should not cache results if unknown error occurs', async () => {
             const fakeError = new Error('test');
             fakeError.code = 'SOMEERR';
-            const newSpyContext = sinon.sandbox.create();
+            const newSpyContext = sinon.createSandbox();
             newSpyContext.stub(fsStub, 'stat').throws(fakeError);
             newSpyContext.spy(console, 'error');
 
