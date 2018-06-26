@@ -3,7 +3,7 @@ language: node_js
 
 cache:
   directories:
-    - node_modules
+    - ~/.npm
 
 notifications:
   email: false
@@ -14,7 +14,12 @@ node_js:
   - '8'
 
 env:
-  CODECLIMATE_REPO_TOKEN: 4bf8e178d6768b6bf836f766d2d10c6fa7c71a22448e10c464d3c29b240bcef6
+  CC_TEST_REPORTER_ID: 4bf8e178d6768b6bf836f766d2d10c6fa7c71a22448e10c464d3c29b240bcef6
+
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 
 script:
   - npm run build
@@ -22,8 +27,10 @@ script:
 
 after_success:
   - npm install -g travis-deploy-once
-  - npm install -g codeclimate-test-reporter
-  - codeclimate-test-reporter < coverage/lcov.info
+  - npm install relcov -g
+  - relcov < ./coverage/lcov.info > ./coverage/lcov-remapped.info
+  - mv ./coverage/lcov-remapped.info ./coverage/lcov.info
+  - ./cc-test-reporter after-build -p coverage --debug
   - travis-deploy-once "npm run semantic-release"
 
 branches:
