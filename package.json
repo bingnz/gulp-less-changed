@@ -57,7 +57,7 @@
     "proxyquire": "^2.0.1",
     "remap-istanbul": "^0.11.1",
     "semantic-release": "^15.6.0",
-    "sinon": "^5.1.1",
+    "sinon": "^6.0.1",
     "sinon-chai": "^3.2.0",
     "sinon-test": "^2.2.0",
     "stream-assert": "^2.0.3",
