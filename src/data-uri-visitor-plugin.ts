@@ -1,19 +1,17 @@
-import * as path from 'path';
-import { DataUriVisitor, Import } from './data-uri-visitor';
+import { DataUriVisitor, Import } from "./data-uri-visitor";
 
-module dataUriVisitorPlugin {
-    export class DataUriVisitorPlugin {
-        private _dataUriVisitor: DataUriVisitor;
+export class DataUriVisitorPlugin {
+  private dataUriVisitor: DataUriVisitor;
 
-        public install(lessLocal: Less.LessStaticExtensions, pluginManager: any): void {
-            this._dataUriVisitor = new DataUriVisitor(lessLocal);
-            pluginManager.addVisitor(this._dataUriVisitor);
-        }
+  public install(
+    lessLocal: Less.LessStaticExtensions,
+    pluginManager: any,
+  ): void {
+    this.dataUriVisitor = new DataUriVisitor(lessLocal);
+    pluginManager.addVisitor(this.dataUriVisitor);
+  }
 
-        public get imports(): Import[] {
-            return this._dataUriVisitor ? this._dataUriVisitor.imports : [];
-        }
-    }
+  public get imports(): Import[] {
+    return this.dataUriVisitor ? this.dataUriVisitor.imports : [];
+  }
 }
-
-export = dataUriVisitorPlugin;
