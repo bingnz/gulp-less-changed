@@ -25,7 +25,7 @@ declare module Less {
     }
 
     interface Arg {
-
+        value: string;
     }
 
     interface CallNode extends Node {
