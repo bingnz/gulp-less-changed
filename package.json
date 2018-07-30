@@ -27,7 +27,7 @@
   "homepage": "https://github.com/bingnz/gulp-less-changed#readme",
   "devDependencies": {
     "@types/bluebird-global": "^3.5.5",
-    "@types/less": "^0.0.33",
+    "@types/less": "^0.0.34",
     "@types/mkdirp": "^0.5.2",
     "@types/object-assign": "^4.0.30",
     "@types/plugin-error": "^0.1.0",
