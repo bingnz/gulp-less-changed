@@ -12,6 +12,7 @@ import sinonTest from "sinon-test";
 import chaiAsPromised from "chai-as-promised";
 import lessLatest from "less";
 import less272 from "less@2.7.2";
+import less304 from "less@3.0.4";
 
 const proxyquire = require("proxyquire")
     .noPreserveCache()
@@ -72,7 +73,8 @@ function readFileAsStream(file, type) {
 
 [
     { description: "when using latest version of less", version: lessLatest },
-    { description: "when using less 2.7.2", version: less272 }
+    { description: "when using less 2.7.2", version: less272 },
+    { description: "when using less 3.0.4", version: less304 }
 ].map(less =>
     describe(`import-lister ${less.description} `, () => {
         let importLister;

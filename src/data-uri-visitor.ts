@@ -9,9 +9,11 @@ export class DataUriVisitor {
     public isReplacing = false;
     public isPreEvalVisitor = true;
     private visitor: Less.Visitor;
-    private importsList: Import[] = [];
 
-    constructor(less: Less.LessStaticExtensions) {
+    constructor(
+        less: Less.LessStaticExtensions,
+        private addImport: (x: Import) => void
+    ) {
         this.visitor = new less.visitors.Visitor(this);
     }
 
@@ -19,7 +21,7 @@ export class DataUriVisitor {
         return this.visitor.visit(root);
     }
 
-    public visitCall(callNode: Less.CallNode, visitArgs: any) {
+    public visitCall(callNode: Less.CallNode) {
         const { ruleNode, importedFile, entryPath } = this.getImportInfo(
             callNode
         );
@@ -28,7 +30,7 @@ export class DataUriVisitor {
             return ruleNode;
         }
 
-        this.importsList.push({
+        this.addImport({
             directory: entryPath ? path.normalize(entryPath) : "",
             relativePath: importedFile
         });
@@ -36,13 +38,10 @@ export class DataUriVisitor {
         return ruleNode;
     }
 
-    public get imports(): Import[] {
-        return this.importsList;
-    }
-
     private tryGetImportedFileName(ruleNode: Less.CallNode): string {
         // use MIME type if available.
-        const fileName = ruleNode.args.length === 2 ? ruleNode.args[1] : ruleNode.args[0];
+        const fileName =
+            ruleNode.args.length === 2 ? ruleNode.args[1] : ruleNode.args[0];
 
         if (!fileName.value || /@/.test(fileName.value)) {
             return null;

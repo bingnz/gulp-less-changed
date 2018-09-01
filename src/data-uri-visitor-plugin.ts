@@ -1,17 +1,13 @@
 import { DataUriVisitor, Import } from "./data-uri-visitor";
 
 export class DataUriVisitorPlugin {
-  private dataUriVisitor: DataUriVisitor;
+    constructor(private importFound: (i: Import) => void) {}
 
-  public install(
-    lessLocal: Less.LessStaticExtensions,
-    pluginManager: any,
-  ): void {
-    this.dataUriVisitor = new DataUriVisitor(lessLocal);
-    pluginManager.addVisitor(this.dataUriVisitor);
-  }
-
-  public get imports(): Import[] {
-    return this.dataUriVisitor ? this.dataUriVisitor.imports : [];
-  }
+    public install(
+        lessLocal: Less.LessStaticExtensions,
+        pluginManager: any
+    ) {
+        const visitor = new DataUriVisitor(lessLocal, this.importFound);
+        pluginManager.addVisitor(visitor);
+    }
 }
