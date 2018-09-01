@@ -66,7 +66,10 @@ export class ImportLister {
         );
     }
 
-    private getLessOptionsForImportListing(file: File, plugin: DataUriVisitorPlugin): Less.Options2 {
+    private getLessOptionsForImportListing(
+        file: File,
+        plugin: DataUriVisitorPlugin
+    ): Less.Options2 {
         const options: Less.Options2 = assign(
             { filename: file.path },
             this.lessOptions
@@ -85,24 +88,19 @@ export class ImportLister {
             return [];
         }
 
-        const dataUriVisitorPlugin = new DataUriVisitorPlugin();
+        const pluginImports: Import[] = [];
+        const dataUriVisitorPlugin = new DataUriVisitorPlugin((i) => pluginImports.push(i));
         const options = this.getLessOptionsForImportListing(file, dataUriVisitorPlugin);
 
         try {
             const lessData = await this.getLessData(file);
-            const renderResult = await (less as Less.RelaxedLessStatic).render(
-                lessData,
-                options
-            );
-            const dataUriImports = await this.resolveImportPaths(
-                options.paths,
-                dataUriVisitorPlugin.imports
-            );
+            const renderResult = await (less as Less.RelaxedLessStatic).render(lessData, options);
+
+            const dataUriImports = await this.resolveImportPaths(options.paths, pluginImports);
+
             return [...renderResult.imports, ...dataUriImports];
         } catch (reason) {
-            const error = `Failed to process imports for '${
-                file.path
-            }': ${reason}`;
+            const error = `Failed to process imports for '${file.path}': ${reason}`;
             console.error(error);
             throw new Error(error);
         }
