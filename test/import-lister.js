@@ -374,6 +374,21 @@ function readFileAsStream(file, type) {
             );
         });
 
+        describe("when passing in a file with a data-uri with content in a subdirectory", () => {
+            const filePath =
+                "./test/list-imports-cases/file-with-data-uri-subdirectory/file.less";
+            it("should return the referenced file and image as an imports", async () => {
+                const f = await readFile(new File({ path: filePath }));
+                const importList = await importLister.listImports(f);
+                expect(
+                    importList.map(x => x.path.split(path.sep).join("!")).sort()
+                ).to.deep.equal([
+                    "test!list-imports-cases!file-with-data-uri-subdirectory!content!image.svg",
+                    "test!list-imports-cases!file-with-data-uri-subdirectory!content!include.less"
+                ]);
+            });
+        });
+
         describe("when passing in a file with a data-uri with MIME type and import by reference", () => {
             const filePath =
                 "./test/list-imports-cases/file-with-data-uri-mime-type/file.less";
