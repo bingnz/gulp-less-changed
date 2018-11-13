@@ -22,7 +22,7 @@ export class DataUriVisitor {
     }
 
     public visitCall(callNode: Less.CallNode) {
-        const { ruleNode, importedFile, entryPath } = this.getImportInfo(
+        const { ruleNode, importedFile, filePath } = this.getImportInfo(
             callNode
         );
 
@@ -31,7 +31,7 @@ export class DataUriVisitor {
         }
 
         this.addImport({
-            directory: entryPath ? path.normalize(entryPath) : "",
+            directory: filePath ? path.normalize(filePath) : "",
             relativePath: importedFile
         });
 
@@ -52,7 +52,7 @@ export class DataUriVisitor {
 
     private getImportInfo(
         ruleNode: Less.CallNode
-    ): { ruleNode: Less.CallNode; importedFile?: string; entryPath?: string } {
+    ): { ruleNode: Less.CallNode; importedFile?: string; filePath?: string } {
         if (ruleNode.name !== "data-uri" || ruleNode.args.length === 0) {
             return { ruleNode };
         }
@@ -67,8 +67,9 @@ export class DataUriVisitor {
             typeof ruleNode.fileInfo === "function"
                 ? ruleNode.fileInfo()
                 : ruleNode.currentFileInfo;
-        const entryPath = fileInfo.entryPath;
 
-        return { ruleNode, importedFile, entryPath };
+        const filePath = fileInfo.currentDirectory;
+
+        return { ruleNode, importedFile, filePath };
     }
 }
