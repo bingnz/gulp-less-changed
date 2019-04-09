@@ -357,25 +357,12 @@ describe("import-buffer", () => {
             ]);
         });
 
-        it("should return no imports if unknown error occurs", async () => {
+        it("should propagate error if unknown error occurs", async () => {
             var fakeError = new Error("test");
             fakeError.code = "SOMEERR";
             spyContext.stub(fsStub, "stat").throws(fakeError);
 
-            const imports = await buffer.listImports(mainFile);
-            expect(imports).to.be.empty;
-        });
-
-        it("should log error if unknown error occurs", async () => {
-            const fakeError = new Error("test");
-            fakeError.code = "SOMEERR";
-            spyContext.stub(fsStub, "stat").throws(fakeError);
-            spyContext.spy(console, "error");
-
-            await buffer.listImports(mainFile);
-            expect(console.error).to.have.been.calledWith(
-                "An unknown error occurred: Error: test"
-            );
+            await expect(buffer.listImports(mainFile)).to.eventually.be.rejectedWith(Error, "test");
         });
 
         it("should not cache results if unknown error occurs", async () => {
@@ -385,10 +372,11 @@ describe("import-buffer", () => {
             newSpyContext.stub(fsStub, "stat").throws(fakeError);
             newSpyContext.spy(console, "error");
 
-            let imports = await buffer.listImports(mainFile);
+            await expect(buffer.listImports(mainFile)).to.eventually.be.rejectedWith();
+
             newSpyContext.restore();
 
-            imports = await buffer.listImports(mainFile);
+            const imports = await buffer.listImports(mainFile);
             expect(imports).not.to.be.empty;
         });
     });
