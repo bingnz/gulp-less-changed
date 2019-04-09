@@ -42,13 +42,8 @@ export class ImportBuffer {
 
   public async listImports(file: File): Promise<IFileInfo[]> {
     const useImportLister: () => Promise<IFileInfo[]> = async () => {
-      try {
-        const importListerResults = await this.importLister(file);
-        return await this.cacheResults(file.path, importListerResults);
-      } catch (error) {
-        console.error(`An unknown error occurred: ${error}`);
-        return [];
-      }
+      const importListerResults = await this.importLister(file);
+      return this.cacheResults(file.path, importListerResults);
     };
 
     const existingImports = await this.loadPreviousResults(file.path);
