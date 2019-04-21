@@ -1,7 +1,7 @@
-import { DataUriVisitor, Import } from "./data-uri-visitor";
+import { DataUriVisitor, IImport } from "./data-uri-visitor";
 
 export class DataUriVisitorPlugin {
-    constructor(private importFound: (i: Import) => void) {}
+    constructor(private importFound: (i: IImport) => void) {}
 
     public install(
         lessLocal: Less.LessStaticExtensions,
