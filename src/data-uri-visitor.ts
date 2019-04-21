@@ -1,6 +1,6 @@
 import * as path from "path";
 
-export interface Import {
+export interface IImport {
     directory: string;
     relativePath: string;
 }
@@ -12,7 +12,7 @@ export class DataUriVisitor {
 
     constructor(
         less: Less.LessStaticExtensions,
-        private addImport: (x: Import) => void
+        private addImport: (x: IImport) => void
     ) {
         this.visitor = new less.visitors.Visitor(this);
     }

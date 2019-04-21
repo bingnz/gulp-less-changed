@@ -4,7 +4,7 @@ import * as less from "less";
 import * as assign from "object-assign";
 import streamToArray = require("stream-to-array");
 import * as File from "vinyl";
-import { Import } from "./data-uri-visitor";
+import { IImport } from "./data-uri-visitor";
 import { DataUriVisitorPlugin } from "./data-uri-visitor-plugin";
 import { IFileInfo } from "./import-buffer";
 import { PathResolver } from "./path-resolver";
@@ -53,7 +53,7 @@ export class ImportLister {
 
     private async resolveImportPaths(
         additionalPaths: string[],
-        imports: Import[]
+        imports: IImport[]
     ): Promise<string[]> {
         return Promise.all(
             imports.map((i) =>
@@ -88,7 +88,7 @@ export class ImportLister {
             return [];
         }
 
-        const pluginImports: Import[] = [];
+        const pluginImports: IImport[] = [];
         const dataUriVisitorPlugin = new DataUriVisitorPlugin((i) => pluginImports.push(i));
         const options = this.getLessOptionsForImportListing(file, dataUriVisitorPlugin);
 
@@ -113,10 +113,11 @@ export class ImportLister {
         } catch (error) {
             if (error.code === "ENOENT") {
                 console.error(`Import '${file}' not found.`);
-                return null;
+            } else {
+                throw error;
             }
-            throw error;
         }
+        return null;
     }
 
     private async getExistingFiles(files: string[]) {
