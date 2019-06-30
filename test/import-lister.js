@@ -49,10 +49,9 @@ function getImportListerCore(options) {
     return listImports.ImportLister;
 }
 
-async function readFile(file) {
-    const data = await fsAsync.readFileAsync(file.path);
-    file.contents = data;
-    return file;
+async function readFile(path) {
+    const data = await fsAsync.readFileAsync(path);
+    return new File({ path: path, contents: data });
 }
 
 function toBytes(data, _, callback) {
@@ -62,13 +61,12 @@ function toBytes(data, _, callback) {
     callback(null, null);
 }
 
-function readFileAsStream(file, type) {
-    let stream = fs.createReadStream(file.path, { autoClose: true });
+function readFileAsStream(path, type) {
+    let stream = fs.createReadStream(path, { autoClose: true });
     if (type === "byte") {
         stream = stream.pipe(through(toBytes));
     }
-    file.contents = stream;
-    return file;
+    return new File({ path: path, contents: stream });
 }
 
 [
@@ -136,7 +134,7 @@ function readFileAsStream(file, type) {
             const filePath =
                 "./test/list-imports-cases/file-with-import/file.less";
             it("should return the single import", async () => {
-                const f = await readFile(new File({ path: filePath }));
+                const f = await readFile(filePath);
                 const importList = await importLister.listImports(f);
                 expect(
                     importList.map(x => x.path.split(path.sep).join("!"))
@@ -150,7 +148,7 @@ function readFileAsStream(file, type) {
             const filePath =
                 "./test/list-imports-cases/file-with-function-call/file.less";
             it("should return no imports", async () => {
-                const f = await readFile(new File({ path: filePath }));
+                const f = await readFile(filePath);
                 const importList = await importLister.listImports(f);
                 expect(importList).to.be.empty;
             });
@@ -160,7 +158,7 @@ function readFileAsStream(file, type) {
             const filePath =
                 "./test/list-imports-cases/file-with-recursive-imports/file.less";
             it("should return the imports", async () => {
-                const f = await readFile(new File({ path: filePath }));
+                const f = await readFile(filePath);
                 const importList = await importLister.listImports(f);
                 expect(
                     importList.sort().map(x => x.path.split(path.sep).join("!"))
@@ -175,7 +173,7 @@ function readFileAsStream(file, type) {
             const filePath =
                 "./test/list-imports-cases/file-with-data-uri/file.less";
             it("should return the referenced image as an import", async () => {
-                const f = await readFile(new File({ path: filePath }));
+                const f = await readFile(filePath);
                 const importList = await importLister.listImports(f);
                 expect(
                     importList.map(x => x.path.split(path.sep).join("!"))
@@ -206,7 +204,7 @@ function readFileAsStream(file, type) {
                         fs: fsStub
                     }))();
 
-                    const f = await readFile(new File({ path: filePath }));
+                    const f = await readFile(filePath);
                     const importList = await importLister.listImports(f);
 
                     expect(
@@ -276,7 +274,7 @@ function readFileAsStream(file, type) {
                         pathResolver: pathResolver
                     }))();
 
-                    const f = await readFile(new File({ path: filePath }));
+                    const f = await readFile(filePath);
                     await expect(
                         importLister.listImports(f)
                     ).to.eventually.be.rejectedWith(Error, /Some error/);
@@ -301,7 +299,7 @@ function readFileAsStream(file, type) {
                         fs: new FakeFs()
                     }))();
 
-                    const f = await readFile(new File({ path: filePath }));
+                    const f = await readFile(filePath);
                     const imports = await importLister.listImports(f);
                     expect(imports).to.be.empty;
                     expect(console.error).to.have.been.calledWith(
@@ -330,7 +328,7 @@ function readFileAsStream(file, type) {
                         fs: fakeFs
                     }))();
 
-                    const f = await readFile(new File({ path: filePath }));
+                    const f = await readFile(filePath);
                     await expect(
                         importLister.listImports(f)
                     ).to.eventually.be.rejectedWith(/bad/);
@@ -363,7 +361,7 @@ function readFileAsStream(file, type) {
                         fs: fsStub
                     }))({ paths: [path1, path2] });
 
-                    const f = await readFile(new File({ path: filePath }));
+                    const f = await readFile(filePath);
                     await importLister.listImports(f);
                     expect(resolverFunction.resolve).to.have.been.calledWith(
                         sinon.match.string,
@@ -378,7 +376,7 @@ function readFileAsStream(file, type) {
             const filePath =
                 "./test/list-imports-cases/file-with-data-uri-subdirectory/file.less";
             it("should return the referenced file and image as an imports", async () => {
-                const f = await readFile(new File({ path: filePath }));
+                const f = await readFile(filePath);
                 const importList = await importLister.listImports(f);
                 expect(
                     importList.map(x => x.path.split(path.sep).join("!")).sort()
@@ -393,7 +391,7 @@ function readFileAsStream(file, type) {
             const filePath =
                 "./test/list-imports-cases/file-with-data-uri-mime-type/file.less";
             it("should return the referenced image and file as imports", async () => {
-                const f = await readFile(new File({ path: filePath }));
+                const f = await readFile(filePath);
                 const importList = await importLister.listImports(f);
                 expect(
                     importList
@@ -411,7 +409,7 @@ function readFileAsStream(file, type) {
             const filePath =
                 "./test/list-imports-cases/file-with-data-uri-variable/file.less";
             it("should return no imports", async () => {
-                const f = await readFile(new File({ path: filePath }));
+                const f = await readFile(filePath);
                 const importList = await importLister.listImports(f);
                 expect(importList).to.be.empty;
             });
@@ -439,7 +437,7 @@ function readFileAsStream(file, type) {
                         fs: fsStub
                     }))();
 
-                    const f = await readFile(new File({ path: filePath }));
+                    const f = await readFile(filePath);
                     const importList = await importLister.listImports(f);
                     expect(importList).to.be.empty;
                     expect(resolverFunction.resolve).not.to.have.been.called;
@@ -451,7 +449,7 @@ function readFileAsStream(file, type) {
             const filePath =
                 "./test/list-imports-cases/file-with-data-uri-interpolated-variable/file.less";
             it("should return no imports", async () => {
-                const f = await readFile(new File({ path: filePath }));
+                const f = await readFile(filePath);
                 const importList = await importLister.listImports(f);
                 expect(importList).to.be.empty;
             });
@@ -479,7 +477,7 @@ function readFileAsStream(file, type) {
                         fs: fsStub
                     }))();
 
-                    const f = await readFile(new File({ path: filePath }));
+                    const f = await readFile(filePath);
                     const importList = await importLister.listImports(f);
                     expect(importList).to.be.empty;
                     expect(resolverFunction.resolve).not.to.have.been.called;
@@ -491,7 +489,7 @@ function readFileAsStream(file, type) {
             const filePath =
                 "./test/list-imports-cases/file-with-recursive-imports/file.less";
             it("should return the imports", async () => {
-                const f = readFileAsStream(new File({ path: filePath }));
+                const f = readFileAsStream(filePath);
                 const importList = await importLister.listImports(f);
                 expect(
                     importList
@@ -510,7 +508,7 @@ function readFileAsStream(file, type) {
                 "./test/list-imports-cases/file-with-recursive-imports/file.less";
             it("should return the imports", async () => {
                 const f = readFileAsStream(
-                    new File({ path: filePath }),
+                    filePath,
                     "byte"
                 );
                 const importList = await importLister.listImports(f);
@@ -717,7 +715,7 @@ describe("when paths are specified", () => {
                 paths: [path1, path2, path3]
             });
 
-            const f = await readFile(new File({ path: filePath }));
+            const f = await readFile(filePath);
             await importLister.listImports(f);
             expect(lessStub.render).to.have.been.calledWith(
                 sinon.match.string,
