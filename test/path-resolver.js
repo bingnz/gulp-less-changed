@@ -37,14 +37,14 @@ describe("path-resolver", () => {
         p.reset();
     });
 
-    describe("when paths are not specified", () => {
+    describe("when additional paths are not specified", () => {
         it("should return path if file exists", async () => {
             const importPath = "this";
             const filePath = "file/exists.txt";
             fakeFs.file(path.join(importPath, filePath), {
                 stat: { mtime: new Date() }
             });
-            const resolved = await pathResolver.resolve(importPath, filePath);
+            const resolved = await pathResolver.resolve(path.join(importPath, filePath));
             expect(resolved).to.equal(path.join(importPath, filePath));
         });
 
@@ -54,7 +54,7 @@ describe("path-resolver", () => {
                 path.sep
             );
             try {
-                await pathResolver.resolve("./", filePath);
+                await pathResolver.resolve(filePath);
                 expect.fail(1, 0, "Should have thrown an error.");
             } catch (error) {
                 expect(error.message).to.contain(
@@ -71,7 +71,7 @@ describe("path-resolver", () => {
             fakeFs.file(path.join(currentDirectory, filePath), {
                 stat: { mtime: new Date() }
             });
-            const resolved = await pathResolver.resolve("./", filePath);
+            const resolved = await pathResolver.resolve(filePath);
             expect(resolved).to.equal(
                 path.normalize(path.join(currentDirectory, filePath))
             );
@@ -88,7 +88,7 @@ describe("path-resolver", () => {
             fakeFs.file(path.join(thisPath, fileName), {
                 stat: { mtime: new Date() }
             });
-            const resolved = await pathResolver.resolve("./", fileName, [
+            const resolved = await pathResolver.resolve(fileName, [
                 anotherPath,
                 thisPath,
                 yetAnotherPath
@@ -103,7 +103,8 @@ describe("path-resolver", () => {
             const currentDirectory = "some/path";
 
             try {
-                await pathResolver.resolve(currentDirectory, fileName, [
+                await pathResolver.resolve(fileName, [
+                    currentDirectory,
                     anotherPath,
                     yetAnotherPath
                 ]);
@@ -132,7 +133,7 @@ describe("path-resolver", () => {
             fakeFs.file(path.join(currentDirectory, filePath), {
                 stat: { mtime: new Date() }
             });
-            const resolved = await pathResolver.resolve("./", filePath, [
+            const resolved = await pathResolver.resolve(filePath, [
                 "bad1",
                 "bad2"
             ]);

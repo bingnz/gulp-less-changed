@@ -365,7 +365,6 @@ function readFileAsStream(path, type) {
                     await importLister.listImports(f);
                     expect(resolverFunction.resolve).to.have.been.calledWith(
                         sinon.match.string,
-                        sinon.match.string,
                         sinon.match.array.contains([path1, path2])
                     );
                 })
@@ -485,6 +484,21 @@ function readFileAsStream(path, type) {
             );
         });
 
+        describe("when passing in a file with a data-uri with content linked using relative paths", () => {
+            const filePath =
+                "./test/list-imports-cases/file-with-data-uri-relative/style/file.less";
+            it("should return the referenced file and image as an imports", async () => {
+                const f = await readFile(filePath);
+                const importList = await importLister.listImports(f);
+                expect(
+                    importList.map(x => x.path.split(path.sep).join("!")).sort()
+                ).to.deep.equal([
+                    "test!list-imports-cases!file-with-data-uri-relative!images!image.svg",
+                    "test!list-imports-cases!file-with-data-uri-relative!style!extra!include.less"
+                ]);
+            });
+        });
+
         describe("when passing in a file as a buffered stream", () => {
             const filePath =
                 "./test/list-imports-cases/file-with-recursive-imports/file.less";
@@ -524,7 +538,7 @@ function readFileAsStream(path, type) {
         describe("when options are specified", () => {
             it("should still process data-uri correctly when passing specified plugins to the less render function", async () => {
                 const resolverFunction = {
-                    resolve: async (_, file) => file
+                    resolve: async (file) => file
                 };
 
                 const pathResolver = {
@@ -555,7 +569,7 @@ function readFileAsStream(path, type) {
                     "./test/list-imports-cases/@{myVar}/file.less";
 
                 const resolverFunction = {
-                    resolve: async (_, file) => file
+                    resolve: async (file) => file
                 };
 
                 const pathResolver = {
@@ -586,7 +600,7 @@ function readFileAsStream(path, type) {
                 "should throw an error",
                 sinon.test(async () => {
                     const resolverFunction = {
-                        resolve: async (_, file) => file
+                        resolve: async (file) => file
                     };
 
                     const pathResolver = {

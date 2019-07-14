@@ -29,9 +29,7 @@ export class ImportLister {
             return [];
         }
 
-        const files = await this.getExistingFiles(
-            await this.listImportsInternal(file)
-        );
+        const files = await this.getExistingFiles(await this.listImportsInternal(file));
 
         return files.map((i) => ({ path: i.path, time: i.stat.mtime.getTime() }));
     }
@@ -41,9 +39,7 @@ export class ImportLister {
             return file.contents.toString();
         }
 
-        const parts = await streamToArray(
-            file.contents as NodeJS.ReadableStream
-        );
+        const parts = await streamToArray(file.contents as NodeJS.ReadableStream);
         const buffers: Buffer[] = [];
         for (const part of parts) {
             buffers.push(Buffer.from(part));
@@ -51,33 +47,22 @@ export class ImportLister {
         return Buffer.concat(buffers).toString();
     }
 
-    private async resolveImportPaths(
-        additionalPaths: string[],
-        imports: IImport[]
-    ): Promise<string[]> {
+    private async resolveImportPaths(additionalPaths: string[], imports: IImport[]): Promise<string[]> {
         return Promise.all(
-            imports.map((i) =>
-                this.pathResolver.resolve(
-                    i.directory,
-                    i.relativePath,
-                    additionalPaths
-                )
-            )
+            imports.map((i) => {
+                const searchPaths = new Set<string>(i.directories);
+                for (const path of additionalPaths) {
+                    searchPaths.add(path);
+                }
+                return this.pathResolver.resolve(i.relativePath, Array.from(searchPaths));
+            })
         );
     }
 
-    private getLessOptionsForImportListing(
-        file: File,
-        plugin: DataUriVisitorPlugin
-    ): Less.Options2 {
-        const options: Less.Options2 = assign(
-            { filename: file.path },
-            this.lessOptions
-        );
+    private getLessOptionsForImportListing(file: File, plugin: DataUriVisitorPlugin): Less.Options2 {
+        const options: Less.Options2 = assign({ filename: file.path }, this.lessOptions);
 
-        options.plugins = options.plugins
-            ? [plugin, ...options.plugins]
-            : [plugin];
+        options.plugins = options.plugins ? [plugin, ...options.plugins] : [plugin];
 
         return options;
     }
@@ -96,7 +81,7 @@ export class ImportLister {
             const lessData = await this.getLessData(file);
             const renderResult = await (less as Less.RelaxedLessStatic).render(lessData, options);
 
-            const dataUriImports = await this.resolveImportPaths(options.paths, pluginImports);
+            const dataUriImports = await this.resolveImportPaths(options.paths || [], pluginImports);
 
             return [...renderResult.imports, ...dataUriImports];
         } catch (reason) {
