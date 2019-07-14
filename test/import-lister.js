@@ -108,7 +108,7 @@ function readFileAsStream(path, type) {
         describe("when passing in an empty file", () => {
             const fakeFile = new File({
                 path: "something.less",
-                contents: new Buffer("")
+                contents: Buffer.from("")
             });
             it("should return an empty list of imports", async () => {
                 const importList = await importLister.listImports(fakeFile);
@@ -119,7 +119,7 @@ function readFileAsStream(path, type) {
         describe("when passing in a file with an import that can't be found", () => {
             const fakeFile = new File({
                 path: "something.less",
-                contents: new Buffer('@import "file2.less";')
+                contents: Buffer.from('@import "file2.less";')
             });
             it("should throw an error", async () => {
                 await expect(
@@ -244,7 +244,7 @@ function readFileAsStream(path, type) {
                     await importLister.listImports(
                         new File({
                             path: "x",
-                            contents: new Buffer(
+                            contents: Buffer.from(
                                 `@a: data-uri('${absolutePath}');`
                             )
                         })
@@ -558,7 +558,7 @@ function readFileAsStream(path, type) {
 
                 const fakeFile = new File({
                     path: "something.less",
-                    contents: new Buffer('@x: data-uri("file.png");')
+                    contents: Buffer.from('@x: data-uri("file.png");')
                 });
                 const imports = await importLister.listImports(fakeFile);
                 expect(imports.map(i => i.path)).to.deep.equal(["file.png"]);
@@ -586,7 +586,7 @@ function readFileAsStream(path, type) {
 
                 const fakeFile = new File({
                     path: "something.less",
-                    contents: new Buffer(`@import '${importPath}';`)
+                    contents: Buffer.from(`@import '${importPath}';`)
                 });
                 const importList = await importLister.listImports(fakeFile);
                 expect(importList.map(i => i.path)).to.include(
@@ -618,7 +618,7 @@ function readFileAsStream(path, type) {
                         importLister.listImports(
                             new File({
                                 path: "x",
-                                contents: new Buffer("@a: data-uri();")
+                                contents: Buffer.from("@a: data-uri();")
                             })
                         )
                     ).to.eventually.be.rejectedWith(
@@ -647,7 +647,7 @@ describe("when options are specified", () => {
 
             const fakeFile = new File({
                 path: "something.less",
-                contents: new Buffer("")
+                contents: Buffer.from("")
             });
             await importLister.listImports(fakeFile);
             expect(lessStub.render).to.have.been.calledWith(
@@ -675,7 +675,7 @@ describe("when options are specified", () => {
 
             const fakeFile = new File({
                 path: "something.less",
-                contents: new Buffer("")
+                contents: Buffer.from("")
             });
             await importLister.listImports(fakeFile);
             const plugins = renderSpy.getCall(0).args[1].plugins;
@@ -700,7 +700,7 @@ describe("when options are specified", () => {
 
             const fakeFile = new File({
                 path: "something.less",
-                contents: new Buffer("")
+                contents: Buffer.from("")
             });
 
             await importLister.listImports(fakeFile);
@@ -753,7 +753,7 @@ describe("when paths are specified", () => {
             paths: paths
         });
 
-        const file = new File({ path: filePath, contents: new Buffer("fake") });
+        const file = new File({ path: filePath, contents: Buffer.from("fake") });
         await importLister.listImports(file);
         expect(paths).to.deep.equal([path1, path2, path3]);
     });
