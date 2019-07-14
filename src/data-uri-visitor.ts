@@ -1,7 +1,5 @@
-import * as path from "path";
-
 export interface IImport {
-    directory: string;
+    directories: string[];
     relativePath: string;
 }
 
@@ -22,7 +20,7 @@ export class DataUriVisitor {
     }
 
     public visitCall(callNode: Less.CallNode) {
-        const { ruleNode, importedFile, filePath } = this.getImportInfo(
+        const { ruleNode, importedFile, fileInfo } = this.getImportInfo(
             callNode
         );
 
@@ -30,8 +28,12 @@ export class DataUriVisitor {
             return ruleNode;
         }
 
+        const directories = new Set<string>();
+        directories.add(fileInfo.currentDirectory || "");
+        directories.add(fileInfo.entryPath || "");
+
         this.addImport({
-            directory: filePath ? path.normalize(filePath) : "",
+            directories: Array.from(directories),
             relativePath: importedFile
         });
 
@@ -52,7 +54,7 @@ export class DataUriVisitor {
 
     private getImportInfo(
         ruleNode: Less.CallNode
-    ): { ruleNode: Less.CallNode; importedFile?: string; filePath?: string } {
+    ): { ruleNode: Less.CallNode; importedFile?: string; fileInfo?: Less.RootFileInfo } {
         if (ruleNode.name !== "data-uri" || ruleNode.args.length === 0) {
             return { ruleNode };
         }
@@ -68,8 +70,6 @@ export class DataUriVisitor {
                 ? ruleNode.fileInfo()
                 : ruleNode.currentFileInfo;
 
-        const filePath = fileInfo.currentDirectory;
-
-        return { ruleNode, importedFile, filePath };
+        return { ruleNode, importedFile, fileInfo };
     }
 }

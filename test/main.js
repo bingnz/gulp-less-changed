@@ -66,7 +66,7 @@ describe("gulp-less-changed", () => {
         let fakeFile = new File({
             path: "something.less",
             stat: { mtime: date },
-            contents: new Buffer("some content")
+            contents: Buffer.from("some content")
         });
         let lessChangedStream = lessChanged();
         lessChangedStream.write(fakeFile);
@@ -93,7 +93,7 @@ describe("gulp-less-changed", () => {
         let fakeFile = new File({
             path: "something.less",
             stat: { mtime: olderDate },
-            contents: new Buffer("some content")
+            contents: Buffer.from("some content")
         });
         let lessChangedStream = lessChanged();
         lessChangedStream.write(fakeFile);
@@ -120,7 +120,7 @@ describe("gulp-less-changed", () => {
         let fakeLessFile = new File({
             path: "hello.less",
             stat: { mtime: newerDate },
-            contents: new Buffer("some content")
+            contents: Buffer.from("some content")
         });
 
         let lessChangedStream = lessChanged();
@@ -157,7 +157,7 @@ describe("gulp-less-changed", () => {
         let fakeLessFile = new File({
             path: "hello.less",
             stat: { mtime: date },
-            contents: new Buffer("some content")
+            contents: Buffer.from("some content")
         });
 
         let lessChangedStream = lessChanged();
@@ -198,7 +198,7 @@ describe("gulp-less-changed", () => {
             fakeLessFile = new File({
                 path: "hello.less",
                 stat: { mtime: date },
-                contents: new Buffer("some content")
+                contents: Buffer.from("some content")
             });
 
             lessChangedStream = lessChanged();
@@ -260,7 +260,7 @@ describe("gulp-less-changed", () => {
             fakeFile = new File({
                 path: "main.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
             lessChangedStream = lessChanged();
         });
@@ -310,7 +310,7 @@ describe("gulp-less-changed", () => {
             fakeFile = new File({
                 path: "main.less",
                 stat: { mtime: olderDate },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
             lessChangedStream = lessChanged();
         });
@@ -365,7 +365,7 @@ describe("gulp-less-changed", () => {
             fakeFile = new File({
                 path: "main.less",
                 stat: { mtime: olderDate },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
             lessChangedStream = lessChanged();
         });
@@ -398,7 +398,7 @@ describe("gulp-less-changed", () => {
             fakeFile = new File({
                 path: "main.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'missing.less';")
+                contents: Buffer.from("@import 'missing.less';")
             });
             lessChangedStream = lessChanged();
         });
@@ -427,7 +427,7 @@ describe("gulp-less-changed", () => {
         let fakeFile = new File({
             path: "something.less",
             stat: { mtime: olderDate },
-            contents: new Buffer("some content")
+            contents: Buffer.from("some content")
         });
         let lessChangedStream = lessChanged({
             getOutputFileName: input => input.replace(".less", ".different.ext")
@@ -471,7 +471,7 @@ describe("gulp-less-changed", () => {
             let fakeFile = new File({
                 path: "main.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
             let lessChangedStream = lessChanged();
 
@@ -519,7 +519,7 @@ describe("gulp-less-changed", () => {
             let fakeFile = new File({
                 path: "main.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
             let lessChangedStream = lessChanged({ paths: [path1, path2] });
 
@@ -565,7 +565,7 @@ describe("gulp-less-changed", () => {
             let fakeFile = new File({
                 path: "main.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
             let lessChangedStream = lessChanged({ paths: [path1, path2] });
 
@@ -611,12 +611,12 @@ describe("gulp-less-changed", () => {
             let fakeFile1 = new File({
                 path: "main.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
             let fakeFile2 = new File({
                 path: "main2.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
 
             let lessChangedStream = lessChanged({ paths: [path1, path2] });
@@ -673,12 +673,12 @@ describe("gulp-less-changed", () => {
             let fakeFile1 = new File({
                 path: "main.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
             let fakeFile2 = new File({
                 path: "main2.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
 
             let lessChangedStream = lessChanged({ paths: [path1, path2] });
@@ -741,12 +741,12 @@ describe("gulp-less-changed", () => {
             let fakeFile1 = new File({
                 path: "main.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
             let fakeFile2 = new File({
                 path: "main2.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
 
             let lessChangedStream = lessChanged({
@@ -818,7 +818,7 @@ describe("gulp-less-changed", () => {
             fakeFile = new File({
                 path: "main.less",
                 stat: { mtime: date },
-                contents: new Buffer("@import 'import.less';")
+                contents: Buffer.from("@import 'import.less';")
             });
             lessChangedStream = lessChanged();
         });

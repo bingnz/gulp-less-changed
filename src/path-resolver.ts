@@ -8,17 +8,10 @@ const fsAsync: any = bluebird.promisifyAll(fs);
 
 export class PathResolver {
     public async resolve(
-        currentDirectory: string,
         inputPath: string,
         searchPaths: string[],
     ): Promise<string> {
-        const pathsToTry = [path.join(currentDirectory, inputPath)];
-
-        if (searchPaths) {
-            pathsToTry.push(...searchPaths.map((p) => path.join(p, inputPath)));
-        }
-
-        pathsToTry.push(path.join(process.cwd(), inputPath));
+        const pathsToTry = (searchPaths || []).concat("./").concat(process.cwd()).map((p) => path.join(p, inputPath));
         const resolvedPaths = await this.filterExistingPaths(pathsToTry);
 
         const validPath = resolvedPaths[0];

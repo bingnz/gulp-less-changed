@@ -108,7 +108,7 @@ function readFileAsStream(path, type) {
         describe("when passing in an empty file", () => {
             const fakeFile = new File({
                 path: "something.less",
-                contents: new Buffer("")
+                contents: Buffer.from("")
             });
             it("should return an empty list of imports", async () => {
                 const importList = await importLister.listImports(fakeFile);
@@ -119,7 +119,7 @@ function readFileAsStream(path, type) {
         describe("when passing in a file with an import that can't be found", () => {
             const fakeFile = new File({
                 path: "something.less",
-                contents: new Buffer('@import "file2.less";')
+                contents: Buffer.from('@import "file2.less";')
             });
             it("should throw an error", async () => {
                 await expect(
@@ -244,7 +244,7 @@ function readFileAsStream(path, type) {
                     await importLister.listImports(
                         new File({
                             path: "x",
-                            contents: new Buffer(
+                            contents: Buffer.from(
                                 `@a: data-uri('${absolutePath}');`
                             )
                         })
@@ -365,7 +365,6 @@ function readFileAsStream(path, type) {
                     await importLister.listImports(f);
                     expect(resolverFunction.resolve).to.have.been.calledWith(
                         sinon.match.string,
-                        sinon.match.string,
                         sinon.match.array.contains([path1, path2])
                     );
                 })
@@ -485,6 +484,21 @@ function readFileAsStream(path, type) {
             );
         });
 
+        describe("when passing in a file with a data-uri with content linked using relative paths", () => {
+            const filePath =
+                "./test/list-imports-cases/file-with-data-uri-relative/style/file.less";
+            it("should return the referenced file and image as an imports", async () => {
+                const f = await readFile(filePath);
+                const importList = await importLister.listImports(f);
+                expect(
+                    importList.map(x => x.path.split(path.sep).join("!")).sort()
+                ).to.deep.equal([
+                    "test!list-imports-cases!file-with-data-uri-relative!images!image.svg",
+                    "test!list-imports-cases!file-with-data-uri-relative!style!extra!include.less"
+                ]);
+            });
+        });
+
         describe("when passing in a file as a buffered stream", () => {
             const filePath =
                 "./test/list-imports-cases/file-with-recursive-imports/file.less";
@@ -524,7 +538,7 @@ function readFileAsStream(path, type) {
         describe("when options are specified", () => {
             it("should still process data-uri correctly when passing specified plugins to the less render function", async () => {
                 const resolverFunction = {
-                    resolve: async (_, file) => file
+                    resolve: async (file) => file
                 };
 
                 const pathResolver = {
@@ -544,7 +558,7 @@ function readFileAsStream(path, type) {
 
                 const fakeFile = new File({
                     path: "something.less",
-                    contents: new Buffer('@x: data-uri("file.png");')
+                    contents: Buffer.from('@x: data-uri("file.png");')
                 });
                 const imports = await importLister.listImports(fakeFile);
                 expect(imports.map(i => i.path)).to.deep.equal(["file.png"]);
@@ -555,7 +569,7 @@ function readFileAsStream(path, type) {
                     "./test/list-imports-cases/@{myVar}/file.less";
 
                 const resolverFunction = {
-                    resolve: async (_, file) => file
+                    resolve: async (file) => file
                 };
 
                 const pathResolver = {
@@ -572,7 +586,7 @@ function readFileAsStream(path, type) {
 
                 const fakeFile = new File({
                     path: "something.less",
-                    contents: new Buffer(`@import '${importPath}';`)
+                    contents: Buffer.from(`@import '${importPath}';`)
                 });
                 const importList = await importLister.listImports(fakeFile);
                 expect(importList.map(i => i.path)).to.include(
@@ -586,7 +600,7 @@ function readFileAsStream(path, type) {
                 "should throw an error",
                 sinon.test(async () => {
                     const resolverFunction = {
-                        resolve: async (_, file) => file
+                        resolve: async (file) => file
                     };
 
                     const pathResolver = {
@@ -604,7 +618,7 @@ function readFileAsStream(path, type) {
                         importLister.listImports(
                             new File({
                                 path: "x",
-                                contents: new Buffer("@a: data-uri();")
+                                contents: Buffer.from("@a: data-uri();")
                             })
                         )
                     ).to.eventually.be.rejectedWith(
@@ -633,7 +647,7 @@ describe("when options are specified", () => {
 
             const fakeFile = new File({
                 path: "something.less",
-                contents: new Buffer("")
+                contents: Buffer.from("")
             });
             await importLister.listImports(fakeFile);
             expect(lessStub.render).to.have.been.calledWith(
@@ -661,7 +675,7 @@ describe("when options are specified", () => {
 
             const fakeFile = new File({
                 path: "something.less",
-                contents: new Buffer("")
+                contents: Buffer.from("")
             });
             await importLister.listImports(fakeFile);
             const plugins = renderSpy.getCall(0).args[1].plugins;
@@ -686,7 +700,7 @@ describe("when options are specified", () => {
 
             const fakeFile = new File({
                 path: "something.less",
-                contents: new Buffer("")
+                contents: Buffer.from("")
             });
 
             await importLister.listImports(fakeFile);
@@ -739,7 +753,7 @@ describe("when paths are specified", () => {
             paths: paths
         });
 
-        const file = new File({ path: filePath, contents: new Buffer("fake") });
+        const file = new File({ path: filePath, contents: Buffer.from("fake") });
         await importLister.listImports(file);
         expect(paths).to.deep.equal([path1, path2, path3]);
     });
