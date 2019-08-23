@@ -52,7 +52,7 @@
     "gulp-typescript": "^5.0.1",
     "istanbul": "^0.4.5",
     "lazypipe": "^1.0.2",
-    "less": "^3.9.0",
+    "less": "^3.10.3",
     "merge2": "^1.2.3",
     "mocha": "^6.1.4",
     "npm-install-version": "^6.0.2",
