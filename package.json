@@ -56,7 +56,7 @@
     "merge2": "^1.2.3",
     "mocha": "^6.1.4",
     "npm-install-version": "^6.0.2",
-    "nyc": "^14.1.1",
+    "nyc": "^15.0.0",
     "pmock": "^0.2.3",
     "proxyquire": "^2.1.0",
     "remap-istanbul": "^0.13.0",
