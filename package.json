@@ -54,7 +54,7 @@
     "lazypipe": "^1.0.2",
     "less": "^3.10.3",
     "merge2": "^1.2.3",
-    "mocha": "^6.1.4",
+    "mocha": "^7.0.1",
     "npm-install-version": "^6.0.2",
     "nyc": "^15.0.0",
     "pmock": "^0.2.3",
