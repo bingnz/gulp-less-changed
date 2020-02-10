@@ -28,7 +28,7 @@
   "devDependencies": {
     "@types/bluebird-global": "^3.5.12",
     "@types/less": "^3.0.0",
-    "@types/mkdirp": "^0.5.2",
+    "@types/mkdirp": "^1.0.0",
     "@types/object-assign": "^4.0.30",
     "@types/plugin-error": "^0.1.1",
     "@types/replace-ext": "0.0.27",
