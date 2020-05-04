@@ -10,7 +10,7 @@ regenerating output.
 [![Test Coverage](https://codeclimate.com/github/bingnz/gulp-less-changed/badges/coverage.svg)](https://codeclimate.com/github/bingnz/gulp-less-changed)
 [![Dependency Status](https://david-dm.org/bingnz/gulp-less-changed.svg)](https://david-dm.org/bingnz/gulp-less-changed)
 [![devDependency Status](https://david-dm.org/bingnz/gulp-less-changed/dev-status.svg)](https://david-dm.org/bingnz/gulp-less-changed#info=devDependencies)
-[![Greenkeeper badge](https://badges.greenkeeper.io/bingnz/gulp-less-changed.svg)](https://greenkeeper.io/)
+
 
 ## Install
 
