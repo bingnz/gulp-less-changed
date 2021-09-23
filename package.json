@@ -76,7 +76,7 @@
     "replace-ext": "^2.0.0",
     "stream-to-array": "^2.3.0",
     "through2": "^3.0.1",
-    "vinyl": "^2.2.0"
+    "vinyl": "^2.2.1"
   },
   "peerDependencies": {
     "less": ">= 2.6.0 < 4.0.0"
