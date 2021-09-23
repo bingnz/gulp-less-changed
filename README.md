@@ -5,7 +5,7 @@
 Analyses LESS files and their dependencies, i.e., imports and files included using `data-uri`, to save wasting time
 regenerating output.
 
-[![Travis build status](http://img.shields.io/travis/bingnz/gulp-less-changed.svg?style=flat)](https://app.travis-ci.com/github/bingnz/gulp-less-changed)
+[![Travis build status](https://app.travis-ci.com/bingnz/gulp-less-changed.svg?branch=master)](https://app.travis-ci.com/github/bingnz/gulp-less-changed)
 [![Code Climate](https://codeclimate.com/github/bingnz/gulp-less-changed/badges/gpa.svg)](https://codeclimate.com/github/bingnz/gulp-less-changed)
 [![Test Coverage](https://codeclimate.com/github/bingnz/gulp-less-changed/badges/coverage.svg)](https://codeclimate.com/github/bingnz/gulp-less-changed)
 [![Dependency Status](https://david-dm.org/bingnz/gulp-less-changed.svg)](https://david-dm.org/bingnz/gulp-less-changed)
